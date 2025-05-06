@@ -22,7 +22,8 @@ export class ConfigService {
         MONGOPORT: process.env.MONGOPORT,
         MONGOHOST: process.env.MONGOHOST,
         MONGOUSERNAME: process.env.MONGOUSERNAME,
-        MONGOPASSWORD: process.env.MONGOPASSWORD
+        MONGOPASSWORD: process.env.MONGOPASSWORD,
+        MONGOURI: process.env.MONGOURI,
       };
     }
   }
