@@ -18,7 +18,6 @@ export class RolesGuard implements CanActivate {
     private readonly authService: AuthService,
   ) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    console.log('RolesGuard activated');
     try {
       const roles = this.reflector.getAllAndOverride<string[]>(SetRoles, [
         context.getHandler(),

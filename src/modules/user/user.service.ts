@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { PlpgsqlService } from 'src/newCore/database/services';
 import { MailsService } from '../mails/mails.service';
 import { UserDto } from './dtos';
@@ -21,6 +21,107 @@ export class UserService {
       );
     } catch (error) {
       this.logger.error('Error al obtener todos los usuarios', error);
+      throw error;
+    }
+  }
+
+  async getUserById(userId: number): Promise<User> {
+    try {
+      return (
+        await this.plpgsqlService.executeQuery<User>(UserSql.getUserById, [
+          userId,
+        ])
+      )[0];
+    } catch (error) {
+      this.logger.error('Error al obtener el usuario por ID', error);
+      throw error;
+    }
+  }
+
+  async getUserByIdentification(identification: string): Promise<User> {
+    try {
+      return (
+        await this.plpgsqlService.executeQuery<User>(
+          UserSql.getUserByIdentification,
+          [identification],
+        )
+      )[0];
+    } catch (error) {
+      this.logger.error(
+        'Error al obtener el usuario por identificación',
+        error,
+      );
+      throw error;
+    }
+  }
+
+  async getUserByFilters(
+    name?: string,
+    beforeDate?: string,
+    afterDate?: string,
+    isVirtual?: string,
+    personState?: string,
+    roleId?: string,
+  ): Promise<User[]> {
+    try {
+      if (!name && !beforeDate && !afterDate && !isVirtual && !personState && !roleId) {
+        throw new BadRequestException(
+          'No se han proporcionado filtros para la consulta',
+        );
+      }
+      let consulta = UserSql.getUserByFilters.replace(
+        ':Conditions',
+        'WHERE :name AND :dateA AND :dateB AND :isVirtual AND :personState AND :roleId',
+      );
+      if (name) {
+        consulta = consulta.replace(
+          ':name',
+          `lower(nombres) || ' ' || lower(apellidos) ILIKE '%${name.toLocaleLowerCase()}%'`,
+        );
+      } else {
+        consulta = consulta.replace(':name', '');
+      }
+      if (afterDate) {
+        consulta = consulta.replace(
+          ':dateA',
+          `lower(fechaingreso) > '${afterDate}'::date`,
+        );
+      } else {
+        consulta = consulta.replace(' AND :dateA', '');
+      }
+      if (beforeDate) {
+        consulta = consulta.replace(
+          ':dateB',
+          `lower(fechaingreso) < '${beforeDate}'::date`,
+        );
+      } else {
+        consulta = consulta.replace(' AND :dateB', '');
+      }
+      if (isVirtual) {
+        consulta = consulta.replace(':isVirtual', `virtual = ${isVirtual}`);
+      } else {
+        consulta = consulta.replace(' AND :isVirtual', '');
+      }
+      if (personState) {
+        consulta = consulta.replace(
+          ':personState',
+          `estadopersona_id = ${personState}`,
+        );
+      } else {
+        consulta = consulta.replace(' AND :personState', '');
+      }
+      if (roleId) {
+        consulta = consulta.replace(
+          ':roleId',
+          `rol_id = ${roleId}`,
+        );
+      } else {
+        consulta = consulta.replace(' AND :roleId', '');
+      }
+      console.log(consulta);
+      return await this.plpgsqlService.executeQuery<User>(consulta, []);
+    } catch (error) {
+      this.logger.error('Error al obtener el usuario por filtros', error);
       throw error;
     }
   }
