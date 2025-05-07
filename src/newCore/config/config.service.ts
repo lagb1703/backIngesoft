@@ -27,7 +27,10 @@ export class ConfigService {
         DB_PORT: process.env.DB_PORT,
         DB_SERVICE_NAME: process.env.DB_SERVICE_NAME,
         ADMINPASS: process.env.ADMINPASS,
-        DB_DATABSE: process.env.DB_DATABSE
+        DB_DATABSE: process.env.DB_DATABSE,
+        GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+        GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+        GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL,
       };
     }
   }

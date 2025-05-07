@@ -1,7 +1,7 @@
 export type UserAcountType = {
     userId: number,
     email: string,
-    password: string,
+    password?: string,
     rol?: string;
 }
 

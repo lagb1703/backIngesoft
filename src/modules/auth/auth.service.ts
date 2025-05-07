@@ -34,10 +34,7 @@ export class AuthService {
     if (!isMatch) {
       throw new UnauthorizedException();
     }
-    const { password, ...result } = user;
-    const access = await this.jwtService.signAsync(result, {
-      secret: this.secret,
-    });
+    const access = await this.getTokenFromUser(user);
     response.cookie('Authorization', `${access}`, {
       httpOnly: true,
       maxAge: 3600000,
@@ -61,9 +58,7 @@ export class AuthService {
         ignoreExpiration: true,
       });
       const { iat, exp, ...userData } = payload;
-      const newToken = await this.jwtService.signAsync(userData, {
-        secret: this.secret,
-      });
+      const newToken = await this.getTokenFromUser(userData as UserAcountType);
       response.cookie('Authorization', newToken, {
         httpOnly: true,
         maxAge: 3600000,
@@ -71,6 +66,19 @@ export class AuthService {
       return { access_token: newToken };
     } catch {
       throw new UnauthorizedException();
+    }
+  }
+
+  async getTokenFromUser(user: UserAcountType) {
+    try {
+      const { password, ...userData } = user;
+      const token = await this.jwtService.signAsync(userData, {
+        secret: this.secret,
+      });
+      return token;
+    } catch (error) {
+      this.logger.error('Error al crear el token', error);
+      throw new UnauthorizedException('Error al crear el token');
     }
   }
 
@@ -95,6 +103,25 @@ export class AuthService {
 
   extractTokenFromCookie(request: Request): string | undefined {
     const token = request.cookies?.Authorization;
+    return token;
+  }
+
+  setCookieByToken(response: Response, token: string): void {
+    response.cookie('Authorization', token, {
+      httpOnly: true,
+      maxAge: 3600000,
+    });
+  }
+
+  async setGoogleHeaderTokenToCookieToken(req: Request,res: Response){
+    if(!(typeof req['user'] == "string")){
+      throw new UnauthorizedException('Token no encontrado');
+    }
+    const token: string = req['user'] as string;
+    if (!token) {
+      throw new UnauthorizedException('Token no encontrado');
+    }
+    this.setCookieByToken(res, token);
     return token;
   }
 }

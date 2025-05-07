@@ -8,6 +8,9 @@ import { Configuration } from './../../newCore/config/config.key';
 import { UserService } from 'src/modules/user/user.service';
 import { PlpgsqlService } from 'src/newCore/database/services';
 import { PostgreService } from 'src/newCore/database/services';
+import { PassportModule } from '@nestjs/passport';
+import { GoogleStrategy } from './strategies/google.strategy';
+import { ConfigModule as ConfigModulePostgress } from 'src/newCore/config/config.module';
 
 const configService: ConfigService = new ConfigService();
 
@@ -45,7 +48,9 @@ class UserModule {
 @Module({
   imports: [
     ConfigModule,
+    ConfigModulePostgress,
     UserModule.register(),
+    PassportModule.register({ session: false }),
     JwtModule.register({
       global: true,
       secret: configService.get(Configuration.JWT_SECRET),
@@ -53,7 +58,7 @@ class UserModule {
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [AuthService, GoogleStrategy],
   exports: [AuthService],
 })
 export class AuthModule {}

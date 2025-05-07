@@ -83,7 +83,7 @@ export class UserDto {
   })
   @IsOptional()
   @IsBoolean()
-  isVirtual: boolean;
+  isVirtual?: boolean;
 
   @ApiProperty({
     description: 'User payment acount',
@@ -92,7 +92,7 @@ export class UserDto {
   @IsOptional()
   @IsString()
   @MaxLength(255)
-  acount: string;
+  acount?: string;
 
   @ApiProperty({
     description: 'User address',
