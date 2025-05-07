@@ -4,8 +4,9 @@ import { CoreModule as CoreModuleMongol } from './../mongoCore/core.module'
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { GenericModule } from './generic/generic.module';
+import { MailsModule } from './mails/mails.module';
 
 @Module({
-  imports: [CoreModule, CoreModuleMongol, AuthModule, UserModule, GenericModule],
+  imports: [CoreModule, CoreModuleMongol, AuthModule, UserModule, GenericModule, MailsModule],
 })
 export class ModulesModule { }

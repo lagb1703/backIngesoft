@@ -45,7 +45,6 @@ export class AuthController {
   }
 
   @Get('')
-  @UseGuards(AuthGuard)
   @Roles('Administrador')
   pepe() {
     return 'pepe';

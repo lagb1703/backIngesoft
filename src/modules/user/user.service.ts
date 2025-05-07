@@ -1,13 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PlpgsqlService } from 'src/newCore/database/services';
+import { MailsService } from '../mails/mails.service';
 import { UserDto } from './dtos';
 import { UserAcountType, RoleType, User } from './types';
 import { UserSql } from './sql/user.sql';
-import {hash} from 'bcrypt';
+import { hash } from 'bcrypt';
 @Injectable()
 export class UserService {
   private readonly logger = new Logger(UserService.name);
-  constructor(private readonly plpgsqlService: PlpgsqlService) {}
+  constructor(
+    private readonly plpgsqlService: PlpgsqlService,
+    private readonly mailsService: MailsService,
+  ) {}
 
   async getAllUsers(): Promise<User[]> {
     try {
@@ -23,6 +27,7 @@ export class UserService {
 
   async saveUser(user: UserDto): Promise<number> {
     try {
+      await this.mailsService.sendWelcomeEmail(user.email);
       const hashedPassword = await hash(user.password, 10);
       user.password = hashedPassword;
       return (

@@ -10,36 +10,18 @@ import { PlpgsqlService } from 'src/newCore/database/services';
 import { PostgreService } from 'src/newCore/database/services';
 import { PassportModule } from '@nestjs/passport';
 import { GoogleStrategy } from './strategies/google.strategy';
+import { MailsService } from '../mails/mails.service';
 import { ConfigModule as ConfigModulePostgress } from 'src/newCore/config/config.module';
 
 const configService: ConfigService = new ConfigService();
 
 @Module({})
 class UserModule {
-  static readonly postgreServiceInstance = new PostgreService();
-
-  static readonly plpgsqlServiceInstance = new PlpgsqlService(
-    UserModule.postgreServiceInstance,
-  );
-
-  static readonly userServiceInstance = new UserService(
-    UserModule.plpgsqlServiceInstance,
-  );
   static register(): DynamicModule {
     return {
       module: UserModule,
-      providers: [
-        {
-          provide: UserService,
-          useValue: UserModule.userServiceInstance,
-        },
-      ],
-      exports: [
-        {
-          provide: UserService,
-          useValue: UserModule.userServiceInstance,
-        },
-      ],
+      providers: [UserService, PlpgsqlService, MailsService, PostgreService],
+      exports: [UserService],
     };
   }
 }
