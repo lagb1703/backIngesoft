@@ -5,7 +5,7 @@ import {
   Param,
   Get,
   Post,
-  Patch,
+  Put,
   Delete,
   Query,
 } from '@nestjs/common';
@@ -38,7 +38,7 @@ export class UserController {
     return await this.userService.saveUser(user);
   }
 
-  @Patch(':userId')
+  @Put(':userId')
   async updateUser(
     @Param('userId') userId: string,
     @Body() user: UserDto,
