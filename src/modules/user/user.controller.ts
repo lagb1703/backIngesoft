@@ -14,7 +14,13 @@ import { Roles, GetUser } from '../auth/decorators';
 import { UserService } from './user.service';
 import { UserDto } from './dtos/user.dto';
 import { ApiTags, ApiQuery } from '@nestjs/swagger';
-import { User, UserAcountType } from './types';
+import {
+  IdentificationType,
+  RoleType,
+  User,
+  UserAcountType,
+  UserStateType,
+} from './types';
 
 @ApiTags('user')
 @Controller('user')
@@ -85,5 +91,25 @@ export class UserController {
   @Get('all')
   async getAllUsers(): Promise<User[]> {
     return await this.userService.getAllUsers();
+  }
+
+  @Get('states')
+  async getAllStates(): Promise<UserStateType[]> {
+    return await this.userService.getAllStates();
+  }
+
+  @Get('roles')
+  async getAllRoles(): Promise<RoleType[]> {
+    return await this.userService.getAllRoles();
+  }
+
+  @Get('rol/:userId')
+  async getRolByUserId(@Param('userId') userId: string): Promise<RoleType> {
+    return await this.userService.getRolByUserId(Number(userId));
+  }
+
+  @Get('identificationTypes')
+  async getAllIdentificationTypes(): Promise<IdentificationType[]> {
+    return await this.userService.getAllIdentificationTypes();
   }
 }

@@ -111,6 +111,30 @@ export enum UserSql {
         WHERE tp.personal_id = $1
     `,
 
+  getAllStates = `
+        SELECT 
+            tep.estadopersona_id as "stateId",
+            tep.estado as "state"
+        FROM usuarios."TB_EstadoPersona" tep
+        ORDER BY tep.estado ASC 
+    `,
+
+  getAllRoles = `
+        SELECT 
+            tr."rol_id" as "roleId",
+            tr."nombre" as "role"
+        FROM usuarios."TB_Roles" tr
+        ORDER BY tr."nombre" ASC
+    `,
+
+  getAllIdentificationTypes = `
+        SELECT 
+            tti."tipoidentificacion_id" as "identificationTypeId",
+            tti."identificacion" as "identification"
+        FROM usuarios."TB_TipoIdentidicacion" tti
+        ORDER BY tti."identificacion" ASC 
+    `,
+
   /**
    * @Actions Seccion solo para las consultas de tipo
    * INSERT, UPDATE, DELETE, POCEDURES
