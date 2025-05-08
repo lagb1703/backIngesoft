@@ -150,6 +150,29 @@ export class GenericService {
   }
 
   /**
+   * Esta funcion actualiza una sucursal en la base de datos postgress.
+   * @param branchOfOfficeDto Contenido de la sucursal a actualizar
+   * @description Esta funcion actualiza una sucursal en la base de datos postgress
+   * @param id id de la sucursal a actualizar
+   * @throws Error si ocurre un error al actualizar la sucursal
+   */
+  async updateBranchOfOffice(
+    branchOfOfficeDto: BranchOfOfficeDto,
+    id: string,
+  ): Promise<void> {
+    try {
+      await this.plpgsqlService.executeProcedureUpdate<BranchOfOfficeDto>(
+        GenericSql.updateBranchOfOffice,
+        branchOfOfficeDto,
+        Number(id),
+      );
+    } catch (error) {
+      this.logger.error('Error updating branch of office', error);
+      throw error;
+    }
+  }
+
+  /**
    * Esta funcion persite en la base de datos postgress un metodo de pago
    * @param meansOfPaymentDto metodo de pago a guardar
    * @description Guarda un metodo de pago en la base de datos
@@ -168,6 +191,29 @@ export class GenericService {
       )['p_id'];
     } catch (error) {
       this.logger.error('Error saving means of payment', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion actualiza un metodo de pago en la base de datos postgress.
+   * @param meansOfPaymentDto Contenido del metodo de pago a actualizar
+   * @description Esta funcion actualiza un metodo de pago en la base de datos postgress
+   * @param id id del metodo de pago a actualizar
+   * @throws Error si ocurre un error al actualizar el metodo de pago
+   */
+  async updateMeansOfPayment(
+    meansOfPaymentDto: MeansOfPaymentDto,
+    id: string,
+  ): Promise<void> {
+    try {
+      await this.plpgsqlService.executeProcedureUpdate<MeansOfPaymentDto>(
+        GenericSql.updateMeansOfPayment,
+        meansOfPaymentDto,
+        Number(id),
+      );
+    } catch (error) {
+      this.logger.error('Error updating means of payment', error);
       throw error;
     }
   }

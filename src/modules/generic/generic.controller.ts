@@ -1,4 +1,4 @@
-import { Controller, Body, Param, Query, Post, Get } from '@nestjs/common';
+import { Controller, Body, Param, Query, Post, Get, Patch } from '@nestjs/common';
 import { GenericService } from './generic.service';
 import { BranchOfOfficeDto, MeansOfPaymentDto } from './dto';
 import { ApiTags } from '@nestjs/swagger';
@@ -36,6 +36,14 @@ export class GenericController {
     return this.genericService.saveBranchOfOffice(branchOfOfficeDto);
   }
 
+  @Patch('branchOfOffice/:id')
+  async updateBranchOfOffice(
+    @Body() branchOfOfficeDto: BranchOfOfficeDto,
+    @Param('id') id: string,
+  ): Promise<void> {
+    return this.genericService.updateBranchOfOffice(branchOfOfficeDto, id);
+  }
+
   @Get('meansOfPayment')
   async getAllMeansOfPayment(): Promise<MeansOfPaymentType[]> {
     return this.genericService.getAllMeansOfPayment();
@@ -60,5 +68,13 @@ export class GenericController {
     @Body() meansOfPaymentDto: MeansOfPaymentDto,
   ): Promise<number> {
     return this.genericService.saveMeansOfPayment(meansOfPaymentDto);
+  }
+
+  @Patch('meansOfPayment/:id')
+  async updateMeansOfPayment(
+    @Body() meansOfPaymentDto: MeansOfPaymentDto,
+    @Param('id') id: string,
+  ): Promise<void> {
+    return this.genericService.updateMeansOfPayment(meansOfPaymentDto, id);
   }
 }

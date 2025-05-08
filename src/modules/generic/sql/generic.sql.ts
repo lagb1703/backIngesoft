@@ -64,5 +64,7 @@ export enum GenericSql {
    */
 
   saveBranchOfOffice = `call public."SP_ESPACIOSPKG_AGREGARSURCUSAL"($1, $2)`,
+  updateBranchOfOffice = `call public."SP_ESPACIOSPKG_EDITARSURCUSAL"($1, $2)`,
   saveMeansOfPayment = `call public."SP_PAGOSPKG_AGREGARMETODOPAGO"($1, $2)`,
+  updateMeansOfPayment = `call public."SP_PAGOSPKG_EDITARMETODOPAGO"($1, $2)`,
 }
