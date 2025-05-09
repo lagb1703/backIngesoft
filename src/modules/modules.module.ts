@@ -5,8 +5,9 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { GenericModule } from './generic/generic.module';
 import { MailsModule } from './mails/mails.module';
+import { FilesModule } from './files/files.module';
 
 @Module({
-  imports: [CoreModule, CoreModuleMongol, AuthModule, UserModule, GenericModule, MailsModule],
+  imports: [CoreModule, CoreModuleMongol, AuthModule, UserModule, GenericModule, MailsModule, FilesModule],
 })
 export class ModulesModule { }

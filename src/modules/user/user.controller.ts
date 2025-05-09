@@ -57,7 +57,6 @@ export class UserController {
   async getUserByIdentification(
     @Query('identification') identification?: string,
   ): Promise<User> {
-    console.log(identification);
     return await this.userService.getUserByIdentification(identification);
   }
 

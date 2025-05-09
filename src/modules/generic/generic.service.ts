@@ -58,7 +58,6 @@ export class GenericService {
    */
   async getMeansOfPaymentByName(name: string): Promise<MeansOfPaymentType[]> {
     try {
-      console.log(name);
       return await this.plpgsqlService.executeQuery<MeansOfPaymentType>(
         GenericSql.getMeansOfPaymentByName,
         [name],

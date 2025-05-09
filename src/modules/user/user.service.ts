@@ -157,7 +157,6 @@ export class UserService {
       } else {
         consulta = consulta.replace(' AND :roleId', '');
       }
-      console.log(consulta);
       return await this.plpgsqlService.executeQuery<User>(consulta, []);
     } catch (error) {
       this.logger.error('Error al obtener el usuario por filtros', error);

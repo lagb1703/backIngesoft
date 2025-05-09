@@ -28,6 +28,10 @@ export class ConfigService {
         GOOGLE_MAIL_USER: process.env.GOOGLE_MAIL_USER,
         GOOGLE_MAIL_PASS: process.env.GOOGLE_MAIL_PASS,
         GOOGLE_MAIL_SECURE: process.env.GOOGLE_MAIL_SECURE,
+        AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
+        AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
+        AWS_BUCKET_NAME: process.env.AWS_BUCKET_NAME,
+        AWS_REGION: process.env.AWS_REGION,
       };
     }
   }

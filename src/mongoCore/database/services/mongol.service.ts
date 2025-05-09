@@ -73,7 +73,7 @@ export class MongoService {
         options?: mg.InsertOneOptions
     ): Promise<mg.BSON.ObjectId> {
         try {
-            const db: mg.Db = this.mongodb.db()
+            const db: mg.Db = this.mongodb.db(this.database);
             const cn: mg.Collection = db.collection(collection);
             const result = await cn.insertOne(document, options);
             const message = this.getLogMessage(collection, document, options)
@@ -103,7 +103,7 @@ export class MongoService {
         options?: mg.UpdateOptions
     ): Promise<mg.BSON.ObjectId> {
         try {
-            const db: mg.Db = this.mongodb.db()
+            const db: mg.Db = this.mongodb.db(this.database)
             const cn: mg.Collection = db.collection(collection);
             const result = await cn.updateMany(filters, document, options)
             const message = this.getLogMessage(collection, filters, options)
@@ -132,7 +132,7 @@ export class MongoService {
         options?: mg.DeleteOptions
     ): Promise<any> {
         try {
-            const db: mg.Db = this.mongodb.db()
+            const db: mg.Db = this.mongodb.db(this.database)
             const cn: mg.Collection = db.collection(collection);
             const result = await cn.deleteMany(filters, options)
             const message = this.getLogMessage(collection, filters, options)
