@@ -135,6 +135,56 @@ export enum UserSql {
         ORDER BY tti."identificacion" ASC 
     `,
 
+  getAllUserFilesTypes = `
+        SELECT 
+            tta."tipoArchivo_id" as "fileTypeId",
+            tta."tipoArchivo" as "fileType",
+            tta."obligatorio" as "isMandatory"
+        FROM archivos."TB_TiposArchivos" tta
+        ORDER BY "tipoArchivo_id" ASC 
+    `,
+
+  getAllUserFiles = `
+        SELECT 
+            tpa."personalArchivo_id" as "fileUserId",
+            tpa."personal_id" as "userId",
+            tpa."archivo_id" as "fileId",
+            tpa."tipoArchivo_id" as "fileTypeId",
+            tta."tipoArchivo" as "fileType"
+        FROM archivos."TB_PersonalesArchivos" tpa
+        LEFT JOIN archivos."TB_TiposArchivos" tta
+            ON tpa."tipoArchivo_id" = tta."tipoArchivo_id"
+        ORDER BY "personalArchivo_id" ASC
+    `,
+
+    getAllUserFilesByUserId = `
+        SELECT 
+            tpa."personalArchivo_id" as "fileUserId",
+            tpa."personal_id" as "userId",
+            tpa."archivo_id" as "fileId",
+            tpa."tipoArchivo_id" as "fileTypeId",
+            tta."tipoArchivo" as "fileType"
+        FROM archivos."TB_PersonalesArchivos" tpa
+        LEFT JOIN archivos."TB_TiposArchivos" tta
+            ON tpa."tipoArchivo_id" = tta."tipoArchivo_id"
+        WHERE tpa."personal_id" = $1
+        ORDER BY tpa."archivo_id" ASC
+    `,
+
+    getUserFilesByUserIdAndFileId = `
+        SELECT 
+            tpa."personalArchivo_id" as "fileUserId",
+            tpa."personal_id" as "userId",
+            tpa."archivo_id" as "fileId",
+            tpa."tipoArchivo_id" as "fileTypeId",
+            tta."tipoArchivo" as "fileType"
+        FROM archivos."TB_PersonalesArchivos" tpa
+        LEFT JOIN archivos."TB_TiposArchivos" tta
+            ON tpa."tipoArchivo_id" = tta."tipoArchivo_id"
+        WHERE tpa."personal_id" = $1 AND tpa."archivo_id" = $2
+        ORDER BY tpa."archivo_id" ASC
+    `,
+
   /**
    * @Actions Seccion solo para las consultas de tipo
    * INSERT, UPDATE, DELETE, POCEDURES
@@ -143,4 +193,9 @@ export enum UserSql {
   saveUser = `call usuarios."SP_USUARIOSPKG_AGREGARUSUARIO"($1, $2)`,
   updateUser = `call usuarios."SP_USUARIOSPKG_EDITARUSUARIO"($1, $2)`,
   deleteUser = `call usuarios."SP_USUARIOSPKG_ELIMINARUSUARIO"($1)`,
+  saveFileUserType = `call usuarios."SP_USUARIOSPKG_AGREGARTIPOARCHIVO"($1, $2)`,
+  updateFileUserType = `call usuarios."SP_USUARIOSPKG_EDITARTIPOARCHIVO"($1, $2)`,
+  deleteFileUserType = `call usuarios."SP_USUARIOSPKG_ELIMINARTIPOARCHIVO"($1)`,
+  saveUserFile = `call usuarios."SP_USUARIOSPKG_AGREGARARCHIVO"($1, $2)`,
+  deleteUserFile = `call usuarios."SP_USUARIOSPKG_ELIMINARCHIVO"($1)`,
 }

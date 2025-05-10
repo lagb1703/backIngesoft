@@ -8,19 +8,26 @@ import {
   Put,
   Delete,
   Query,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from './../auth/guards';
 import { Roles, GetUser } from '../auth/decorators';
 import { UserService } from './user.service';
 import { UserDto } from './dtos/user.dto';
-import { ApiTags, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiQuery, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import {
+  FileUserType,
+  FileUserTypeType,
   IdentificationType,
   RoleType,
   User,
   UserAcountType,
   UserStateType,
 } from './types';
+import { FileUserDto, FileUserTypeDto } from './dtos';
+import { MongoFileType } from '../files/types';
 
 @ApiTags('user')
 @Controller('user')
@@ -110,5 +117,69 @@ export class UserController {
   @Get('identificationTypes')
   async getAllIdentificationTypes(): Promise<IdentificationType[]> {
     return await this.userService.getAllIdentificationTypes();
+  }
+
+  @Get('fileUserTypes')
+  async getAllUserFilesTypes(): Promise<FileUserTypeType[]> {
+    return await this.userService.getAllUserFilesTypes();
+  }
+
+  @Post('fileUserTypes')
+  async saveUserFileType(
+    @Body() fileUserType: FileUserTypeDto,
+  ): Promise<number> {
+    return await this.userService.saveUserFileType(fileUserType);
+  }
+
+  @Put('fileUserTypes/:fileTypeId')
+  async updateUserFileType(
+    @Param('fileTypeId') fileTypeId: string,
+    @Body() fileUserType: FileUserTypeDto,
+  ): Promise<void> {
+    return await this.userService.updateUserFileType(fileTypeId, fileUserType);
+  }
+
+  @Delete('fileUserTypes/:fileTypeId')
+  async deleteUserFileType(
+    @Param('fileTypeId') fileTypeId: string,
+  ): Promise<void> {
+    return await this.userService.deleteUserFileType(fileTypeId);
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('upload/:fileTypeId')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ type: FileUserDto })
+  async subir(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() body: FileUserDto,
+    @GetUser() user: UserAcountType,
+  ) {
+    body.file = file;
+    return this.userService.uploadFile(body, user.userId);
+  }
+
+  @Roles('Administrativo')
+  @Get('files')
+  async getAllUserFiles(): Promise<FileUserType[]> {
+    return await this.userService.getAllUserFiles();
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('files/userFiles')
+  async getAllUserFilesByUserId(
+    @GetUser() user: UserAcountType,
+  ): Promise<(FileUserType & Partial<MongoFileType>)[]> {
+    return await this.userService.getAllUserFilesByUserId(user.userId);
+  }
+
+  @UseGuards(AuthGuard)
+  @Delete('files/:fileId')
+  async deleteUSerFile(
+    @Param('fileId') fileId: string,
+    @GetUser() user: UserAcountType,
+  ): Promise<void> {
+    return await this.userService.deleteFile(fileId, user.userId);
   }
 }

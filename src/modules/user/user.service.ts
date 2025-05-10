@@ -1,22 +1,32 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PlpgsqlService } from 'src/newCore/database/services';
 import { MailsService } from '../mails/mails.service';
-import { UserDto } from './dtos';
+import { FileUserDto, FileUserTypeDto, UserDto } from './dtos';
 import {
   UserAcountType,
   RoleType,
   User,
   UserStateType,
   IdentificationType,
+  FileUserTypeType,
+  FileUserType,
 } from './types';
 import { UserSql } from './sql/user.sql';
 import { hash } from 'bcrypt';
+import { FilesService } from './../files/services/files.service';
+import { MongoFileType } from '../files/types';
 @Injectable()
 export class UserService {
   private readonly logger = new Logger(UserService.name);
   constructor(
     private readonly plpgsqlService: PlpgsqlService,
     private readonly mailsService: MailsService,
+    private readonly filesService: FilesService,
   ) {}
 
   /**
@@ -311,6 +321,283 @@ export class UserService {
         'Error al obtener todos los tipos de identificación',
         error,
       );
+      throw error;
+    }
+  }
+
+  /**
+   * Esta función obtiene todos los tipos de archivos de la base de datos postgress.
+   * @returns todos los tipos de archivos correspondientes a los usuarios de la base de datos
+   * @throws Error si ocurre un error al ejecutar la consulta
+   */
+  async getAllUserFilesTypes(): Promise<FileUserTypeType[]> {
+    try {
+      return await this.plpgsqlService.executeQuery<FileUserTypeType>(
+        UserSql.getAllUserFilesTypes,
+        [],
+      );
+    } catch (error) {
+      this.logger.error('Error al obtener todos los tipos de archivos', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta función guarda un tipo de archivo de usuario en la base de datos postgress.
+   * @param fileType tipo de archivo a guardar
+   * @returns El ID del tipo de archivo guardado
+   */
+  async saveUserFileType(fileType: FileUserTypeDto): Promise<number> {
+    try {
+      return (
+        await this.plpgsqlService.executeProcedureSave<FileUserTypeDto>(
+          UserSql.saveFileUserType,
+          fileType,
+        )
+      )['p_id'];
+    } catch (error) {
+      this.logger.error(
+        'Error al guardar el tipo de archivo del usuario',
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Esta función guarda un tipo de archivo de usuario en la base de datos postgress.
+   * @param fileTypeId id del tipo de archivo a actualizar
+   * @param fileType tipo de archivo a actualizar
+   * @returns void
+   * @throws Error si ocurre un error al ejecutar la consulta
+   */
+  async updateUserFileType(
+    fileTypeId: string,
+    fileType: FileUserTypeDto,
+  ): Promise<void> {
+    try {
+      await this.plpgsqlService.executeProcedureUpdate<FileUserTypeDto>(
+        UserSql.updateFileUserType,
+        fileType,
+        Number(fileTypeId),
+      );
+    } catch (error) {
+      this.logger.error(
+        'Error al actualizar el tipo de archivo del usuario',
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Esta función elimina un tipo de archivo de usuario de la base de datos postgress.
+   * @param fileTypeId id del tipo de archivo a eliminar
+   * @returns void
+   */
+  async deleteUserFileType(fileTypeId: string): Promise<void> {
+    try {
+      await this.plpgsqlService.executeProcedureDelete(
+        UserSql.deleteFileUserType,
+        Number(fileTypeId),
+      );
+    } catch (error) {
+      this.logger.error(
+        'Error al eliminar el tipo de archivo del usuario',
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion obtiene todos los archivos de usuario de la base de datos postgress.
+   * @returns todos los archivos de usuario de la base de datos postgress
+   * @throws Error si ocurre un error al ejecutar la consulta
+   */
+  async getAllUserFiles(): Promise<FileUserType[]> {
+    try {
+      return await this.plpgsqlService.executeQuery<FileUserType>(
+        UserSql.getAllUserFiles,
+        [],
+      );
+    } catch (error) {
+      this.logger.error(
+        'Error al obtener todos los archivos de usuario',
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion es una implementacion de tipico algoritmo de busqueda binaria
+   * @param search Elemento a buscar
+   * @param inSearch Array de objectos en el que se buscara
+   * @param property propiedad del objecto por el cual se buscara
+   * @returns si el objecto buscado esta en el array retornara el indice del objecto en el array,
+   * en el caso contrario devolvera null
+   */
+  async binarySearch<T>(
+    search: string | number,
+    inSearch: Array<T>,
+    property: keyof T,
+  ): Promise<number | null> {
+    try {
+      let begin = 0,
+        end = inSearch.length - 1;
+      while (begin <= end) {
+        let mid = Math.floor((begin + end) / 2);
+        if (inSearch[mid] && inSearch[mid][property] == search) return mid;
+        if (inSearch[mid] && inSearch[mid][property] > search) end = mid - 1;
+        else if (inSearch[mid] && inSearch[mid][property] < search)
+          begin = mid + 1;
+      }
+      return null;
+    } catch (err) {
+      this.logger.error(err);
+      throw Error(err);
+    }
+  }
+
+  async getAllUserFilesByUserId(
+    userId: number,
+  ): Promise<(FileUserType & Partial<MongoFileType>)[]> {
+    try {
+      const filesUser: FileUserType[] =
+        await this.plpgsqlService.executeQuery<FileUserType>(
+          UserSql.getAllUserFilesByUserId,
+          [userId],
+        );
+      const mongoFiles: MongoFileType[] =
+        await this.filesService.getBasicFilesInfoByIds(
+          filesUser.map((file) => file.fileId.toString()),
+        );
+      return Promise.all(
+        filesUser.map(async (file) => {
+          const index = await this.binarySearch(
+            file.fileId,
+            mongoFiles,
+            'archivo_id',
+          );
+          if (index !== null) {
+            const { archivo_id, ...rest } = mongoFiles[index];
+            return { ...file, ...rest };
+          }
+          return {
+            ...file,
+            nombre: null,
+            contenedor: null,
+            sha256: null,
+          };
+        }),
+      );
+    } catch (error) {
+      this.logger.error(
+        'Error al obtener todos los archivos de usuario por ID',
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Esta función sube un archivo de usuario a la base de datos postgress.
+   * @param fileUser json que se guarda en la tabla de archivos de usuario
+   * @returns el id del archivo de usuario guardado
+   * @throws Error si ocurre un error al ejecutar la consulta
+   */
+  private async uploadUserFile(fileUser: FileUserType): Promise<number> {
+    try {
+      return (
+        await this.plpgsqlService.executeProcedureSave<FileUserType>(
+          UserSql.saveUserFile,
+          fileUser,
+        )
+      )['p_id'];
+    } catch (error) {
+      this.logger.error('Error al subir el archivo', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta función vincula un archivo a subir a un usuario en la base de datos postgress.
+   * @param file archivo y tipo de archivo a subir
+   * @param userId id del usuario al que pertenece el archivo
+   * @returns la row de la inserción del archivo en la tabla de archivos de usuario
+   * @throws Error si ocurre un error al ejecutar la consulta
+   */
+  async uploadFile(file: FileUserDto, userId: number): Promise<FileUserType> {
+    try {
+      const fileId = await this.filesService.uploadFile(file.file);
+      const fileUser: FileUserType = {
+        fileId: fileId,
+        fileTypeId: Number(file.fileTypeId),
+        userId: userId,
+      };
+      fileUser.fileUserId = await this.uploadUserFile(fileUser);
+      return fileUser;
+    } catch (error) {
+      this.logger.error('Error al subir el archivo', error);
+      throw error;
+    }
+  }
+
+  private async getUserFilesByUserIdAndFileId(
+    userId: number,
+    fileId: string,
+  ): Promise<FileUserType> {
+    try {
+      return (
+        await this.plpgsqlService.executeQuery<FileUserType>(
+          UserSql.getUserFilesByUserIdAndFileId,
+          [userId, fileId],
+        )
+      )[0];
+    } catch (error) {
+      this.logger.error(
+        'Error al obtener los archivos de usuario por ID y archivo',
+        error,
+      );
+      throw error;
+    }
+  }
+
+  private async deleteUserFile(fileId: number): Promise<void> {
+    try {
+      await this.plpgsqlService.executeProcedureDelete(
+        UserSql.deleteUserFile,
+        fileId,
+      );
+    } catch (error) {
+      this.logger.error('Error al eliminar el archivo de usuario', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta función elimina un archivo de usuario de la base de datos postgress.
+   * @param fileId id del archivo a eliminar
+   * @param userId id del usuario al que pertenece el archivo
+   * @returns void
+   * @throws Error si ocurre un error al ejecutar la consulta
+   */
+  async deleteFile(fileId: string, userId: number): Promise<void> {
+    try {
+      const fileUser: FileUserType = await this.getUserFilesByUserIdAndFileId(
+        userId,
+        fileId,
+      );
+      if (!fileUser) {
+        throw new UnauthorizedException(
+          'El archivo no existe o no pertenece al usuario',
+        );
+      }
+      await this.deleteUserFile(fileUser.fileUserId);
+      await this.filesService.deleteFile(fileId);
+    } catch (error) {
+      this.logger.error('Error al eliminar el archivo de usuario', error);
       throw error;
     }
   }

@@ -22,6 +22,36 @@ export class MongoService {
     return hashHex;
   }
 
+  async getFileByIds(ids: string[]): Promise<MongoFileType[]> {
+    try {
+      const files: MongoFileType[] = (await this.mongoService.aggregate(
+        FilesCollection.FILES,
+        [
+          {
+            $match: {
+              _id: {
+                $in: ids.map((id) => new ObjectId(id)),
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              nombre: 1,
+              archivo_id: '$_id',
+              sha256: 1,
+              contenedor: 1,
+            },
+          },
+        ],
+      )) as MongoFileType[];
+      return files;
+    } catch (error) {
+      this.logger.error('Error fetching file by ID', error);
+      throw new Error('Error fetching file by ID');
+    }
+  }
+
   async getFileById(id: string): Promise<MongoFileType> {
     try {
       const file: MongoFileType = (
@@ -87,10 +117,9 @@ export class MongoService {
 
   async deleteFile(id: string): Promise<void> {
     try {
-      const result = await this.mongoService.delete(FilesCollection.FILES, {
+      await this.mongoService.delete(FilesCollection.FILES, {
         _id: new ObjectId(id),
       });
-      console.log('Delete result:', result);
     } catch (error) {
       this.logger.error('Error deleting file', error);
       throw new Error('Error deleting file');

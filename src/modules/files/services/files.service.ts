@@ -3,10 +3,7 @@ import { ConfigService } from './../../../newCore/config/config.service';
 import {
   S3Client,
   PutObjectCommand,
-  CreateBucketCommand,
   DeleteObjectCommand,
-  DeleteBucketCommand,
-  paginateListObjectsV2,
   GetObjectCommand,
 } from '@aws-sdk/client-s3';
 import { MongoService } from './mongo.service';
@@ -27,6 +24,26 @@ export class FilesService {
       },
     });
     this.bucketName = this.configService.get('AWS_BUCKET_NAME');
+  }
+
+  async getBasicFilesInfoByIds(ids: string[]): Promise<MongoFileType[]> {
+    try {
+      const files: MongoFileType[] = await this.mongoService.getFileByIds(ids);
+      return files;
+    } catch (error) {
+      console.error('Error fetching files from S3', error);
+      throw new Error('Error fetching files from S3');
+    }
+  }
+
+  async getBasicFileInfoById(id: string): Promise<MongoFileType> {
+    try {
+      const fileData: MongoFileType = await this.mongoService.getFileById(id);
+      return fileData;
+    } catch (error) {
+      console.error('Error fetching basic file info from S3', error);
+      throw new Error('Error fetching basic file info from S3');
+    }
   }
 
   async getFileById(id: string): Promise<StreamableFile> {
@@ -57,7 +74,6 @@ export class FilesService {
       const existingFileId = await this.mongoService.getFileIdBySha256(
         fileHash,
       );
-      console.log('File already exists in MongoDB:', existingFileId);
       if (existingFileId) {
         return existingFileId.archivo_id.toString();
       }
