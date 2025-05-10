@@ -113,8 +113,11 @@ export class AuthService {
     });
   }
 
-  async setGoogleHeaderTokenToCookieToken(req: Request,res: Response){
-    if(!(typeof req['user'] == "string")){
+  async setGoogleHeaderTokenToCookieToken(req: Request, res: Response) {
+    if (!req['user']) {
+      throw new UnauthorizedException('Usuario no encontrado');
+    }
+    if (!(typeof req['user'] == 'string')) {
       throw new UnauthorizedException('Token no encontrado');
     }
     const token: string = req['user'] as string;

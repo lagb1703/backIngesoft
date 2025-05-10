@@ -44,28 +44,11 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       throw new UnauthorizedException(
         'No se encontró el correo electrónico en el perfil de Google',
       );
-    let user: UserAcountType = await this.userService.getUserAcountByEmail(
+    const user: UserAcountType = await this.userService.getUserAcountByEmail(
       profile.emails?.[0].value,
     );
     if (!user) {
-      const userDto: UserDto = {
-        name: profile.displayName,
-        email: profile.emails?.[0].value,
-        password: '',
-        lastName: profile.name?.familyName,
-        phone: 0,
-        identification: '',
-        address: '',
-        roleId: 3,
-        identificationId: 1,
-        branchOficeId: 5,
-        personStateId: 1,
-        meansOfPayment: 4,
-      };
-      user = {
-        userId: await this.userService.saveUser(userDto),
-        email: profile.emails?.[0].value,
-      };
+      return null;
     }
     return await this.createToken(user);
   }
