@@ -1,18 +1,27 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { PaysheetSql } from './sql/paysheet.sql';
 import { PlpgsqlService } from './../../newCore/database/services';
 import {
+  ConceptType,
+  ConceptTypeType,
   ContractType,
   jobPositionType,
+  NoveltyType,
+  PaymentType,
   PaysheetType,
   PaysheetTypeType,
 } from './types';
 import {
+  ConceptDto,
+  ConceptTypeDto,
   ContractTypeDto,
   JobPositionDto,
+  NoveltyDto,
+  PaymentDto,
   PaysheetDto,
   PaysheetTypeDto,
 } from './dto';
+import { json } from 'stream/consumers';
 
 @Injectable()
 export class PaysheetService {
@@ -388,6 +397,335 @@ export class PaysheetService {
       );
     } catch (error) {
       this.logger.error('Error deleting paysheet type', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion obtiene todas las novedades de la base de datos postgress.
+   * @returns todas las novedades de la base de datos postgress.
+   */
+  async getAllNovelties(): Promise<NoveltyType[]> {
+    try {
+      return await this.plpgsqlService.executeQuery<NoveltyType>(
+        PaysheetSql.getAllNovelties,
+        [],
+      );
+    } catch (error) {
+      this.logger.error('Error fetching all novelty types', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion obtiene todos los tipos de concepto de la base de datos postgress.
+   * @returns todos los tipos de concepto de la base de datos postgress.
+   */
+  async getAllConceptsTypes(): Promise<ConceptTypeType[]> {
+    try {
+      return await this.plpgsqlService.executeQuery<ConceptTypeType>(
+        PaysheetSql.getAllConceptsTypes,
+        [],
+      );
+    } catch (error) {
+      this.logger.error('Error fetching all concept types', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion obtiene todos los conceptos de la base de datos postgress.
+   * @returns todas los conceptos de la base de datos postgress.
+   */
+  async getAllConcepts(): Promise<ConceptType[]> {
+    try {
+      return await this.plpgsqlService.executeQuery<ConceptType>(
+        PaysheetSql.getAllConcepts,
+        [],
+      );
+    } catch (error) {
+      this.logger.error('Error fetching all concepts', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion obtiene todos los pagos de la base de datos postgress.
+   * @returns todos los pagos de la base de datos postgress.
+   */
+  async getAllPayments(): Promise<PaymentType[]> {
+    try {
+      return await this.plpgsqlService.executeQuery<PaymentType>(
+        PaysheetSql.getAllPayments,
+        [],
+      );
+    } catch (error) {
+      this.logger.error('Error fetching all payments', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion guarda una novedad en la base de datos postgress.
+   * @param novelty la novedad a guardar en la base de datos.
+   * @returns el id de la novedad guardada en la base de datos.
+   */
+  async saveNovelty(novelty: NoveltyDto): Promise<number> {
+    try {
+      return (
+        await this.plpgsqlService.executeProcedureSave<NoveltyDto>(
+          PaysheetSql.saveNovelty,
+          novelty,
+        )
+      )['p_id'];
+    } catch (error) {
+      this.logger.error('Error saving novelty', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion guarda un tipo de concepto en la base de datos postgress.
+   * @param conceptType el tipo de concepto a guardar en la base de datos.
+   * @returns el id del tipo de concepto guardado en la base de datos.
+   */
+  async saveConceptType(conceptType: ConceptTypeDto): Promise<number> {
+    try {
+      if (conceptType.minValue && conceptType.maxValue) {
+        conceptType.minMaxValue = `[${conceptType.minValue},${conceptType.maxValue})`;
+      }
+      if (conceptType.minValue && !conceptType.maxValue) {
+        conceptType.minMaxValue = `[${conceptType.minValue},infinity)`;
+      }
+      if (!conceptType.minValue && conceptType.maxValue) {
+        conceptType.minMaxValue = `[0,${conceptType.maxValue})`;
+      }
+      if (!conceptType.minValue && !conceptType.maxValue) {
+        conceptType.minMaxValue = '[0,infinity)';
+      }
+      delete conceptType.minValue;
+      delete conceptType.maxValue;
+      return (
+        await this.plpgsqlService.executeProcedureSave<ConceptTypeDto>(
+          PaysheetSql.saveConceptType,
+          conceptType,
+        )
+      )['p_id'];
+    } catch (error) {
+      this.logger.error('Error saving concept type', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion guarda un concepto en la base de datos postgress.
+   * @param concept el concepto a guardar en la base de datos.
+   * @returns el id del concepto guardado en la base de datos.
+   */
+  async saveConcept(concept: ConceptDto): Promise<number> {
+    try {
+      return (
+        await this.plpgsqlService.executeProcedureSave<ConceptDto>(
+          PaysheetSql.saveConcept,
+          concept,
+        )
+      )['p_id'];
+    } catch (error) {
+      this.logger.error('Error saving concept', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion guarda un pago en la base de datos postgress.
+   * @param payment el pago a guardar en la base de datos.
+   * @returns el id del pago guardado en la base de datos.
+   */
+  async savePayment(payment: PaymentDto): Promise<number> {
+    try {
+      if (
+        !Boolean(
+          (!payment.conceptId && !payment.contractId && payment.noveltyId) ||
+            (!payment.conceptId && payment.contractId && !payment.noveltyId) ||
+            (payment.conceptId && !payment.contractId && !payment.noveltyId),
+        )
+      )
+        throw new BadRequestException(
+          'the set of noveltyId, contractId and conceptId is invalid, only one of them can is defined',
+        );
+      payment.paymentTimestamp = new Date();
+      return (
+        await this.plpgsqlService.executeProcedureSave<PaymentDto>(
+          PaysheetSql.savePayment,
+          payment,
+        )
+      )['p_id'];
+    } catch (error) {
+      this.logger.error('Error saving payment', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion actualiza una novedad en la base de datos postgress.
+   * @param novelty la novedad a actualizar.
+   * @param id id de la novedad a actualizar.
+   */
+  async updateNovelty(novelty: NoveltyDto, id: string): Promise<void> {
+    try {
+      await this.plpgsqlService.executeProcedureUpdate<NoveltyDto>(
+        PaysheetSql.updateNovelty,
+        novelty,
+        Number(id),
+      );
+    } catch (error) {
+      this.logger.error('Error updating novelty', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion actualiza un tipo de concepto en la base de datos postgress.
+   * @param conceptType el tipo de concepto a actualizar.
+   * @param id id del tipo de concepto a actualizar.
+   */
+  async updateConceptType(
+    conceptType: ConceptTypeDto,
+    id: string,
+  ): Promise<void> {
+    try {
+      if (conceptType.minValue && conceptType.maxValue) {
+        conceptType.minMaxValue = `[${conceptType.minValue},${conceptType.maxValue})`;
+      }
+      if (conceptType.minValue && !conceptType.maxValue) {
+        conceptType.minMaxValue = `[${conceptType.minValue},infinity)`;
+      }
+      if (!conceptType.minValue && conceptType.maxValue) {
+        conceptType.minMaxValue = `[0,${conceptType.maxValue})`;
+      }
+      if (!conceptType.minValue && !conceptType.maxValue) {
+        conceptType.minMaxValue = '[0,infinity)';
+      }
+      delete conceptType.minValue;
+      delete conceptType.maxValue;
+      await this.plpgsqlService.executeProcedureUpdate<ConceptTypeDto>(
+        PaysheetSql.updateConceptType,
+        conceptType,
+        Number(id),
+      );
+    } catch (error) {
+      this.logger.error('Error updating concept type', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion actualiza un concepto en la base de datos postgress.
+   * @param concept concepto a actualizar
+   * @param id id del concepto a actualizar
+   */
+  async updateConcept(concept: ConceptDto, id: string): Promise<void> {
+    try {
+      await this.plpgsqlService.executeProcedureUpdate<ConceptDto>(
+        PaysheetSql.updateConcept,
+        concept,
+        Number(id),
+      );
+    } catch (error) {
+      this.logger.error('Error updating concept', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion actualiza un pago en la base de datos postgress.
+   * @param payment pago a actualizar
+   * @param id id del pago a actualizar
+   */
+  async updatePayment(payment: PaymentDto, id: string): Promise<void> {
+    try {
+      if (
+        !Boolean(
+          (!payment.conceptId && !payment.contractId && payment.noveltyId) ||
+            (!payment.conceptId && payment.contractId && !payment.noveltyId) ||
+            (payment.conceptId && !payment.contractId && !payment.noveltyId),
+        )
+      )
+        throw new BadRequestException(
+          'the set of noveltyId, contractId and conceptId is invalid, only one of them can is defined',
+        );
+      payment.paymentTimestamp = new Date();
+      await this.plpgsqlService.executeProcedureUpdate<PaymentDto>(
+        PaysheetSql.updatePayment,
+        payment,
+        Number(id),
+      );
+    } catch (error) {
+      this.logger.error('Error updating payment', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion elimina una novedad de la base de datos postgress.
+   * @param id id de la novedad a eliminar
+   */
+  async deleteNovelty(id: string): Promise<void> {
+    try {
+      await this.plpgsqlService.executeProcedureDelete(
+        PaysheetSql.deleteNovelty,
+        Number(id),
+      );
+    } catch (error) {
+      this.logger.error('Error deleting novelty', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion elimina un tipo de concepto de la base de datos postgress.
+   * @param id id del tipo de concepto a eliminar
+   */
+  async deleteConceptType(id: string): Promise<void> {
+    try {
+      await this.plpgsqlService.executeProcedureDelete(
+        PaysheetSql.deleteConceptType,
+        Number(id),
+      );
+    } catch (error) {
+      this.logger.error('Error deleting concept type', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion elimina un concepto de la base de datos postgress.
+   * @param id id del concepto a eliminar
+   */
+  async deleteConcept(id: string): Promise<void> {
+    try {
+      await this.plpgsqlService.executeProcedureDelete(
+        PaysheetSql.deleteConcept,
+        Number(id),
+      );
+    } catch (error) {
+      this.logger.error('Error deleting concept', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion elimina un pago de la base de datos postgress.
+   * @param id id del pago a eliminar
+   */
+  async deletePayment(id: string): Promise<void> {
+    try {
+      await this.plpgsqlService.executeProcedureDelete(
+        PaysheetSql.deletePayment,
+        Number(id),
+      );
+    } catch (error) {
+      this.logger.error('Error deleting payment', error);
       throw error;
     }
   }

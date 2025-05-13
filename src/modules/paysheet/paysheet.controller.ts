@@ -13,8 +13,12 @@ import { PaysheetService } from './paysheet.service';
 import { GetUser, Roles } from '../auth/decorators';
 import { UserAcountType } from '../user/types';
 import {
+  ConceptDto,
+  ConceptTypeDto,
   ContractTypeDto,
   JobPositionDto,
+  NoveltyDto,
+  PaymentDto,
   PaysheetDto,
   PaysheetTypeDto,
 } from './dto';
@@ -146,5 +150,92 @@ export class PaysheetController {
   @Delete('paysheetType/:id')
   async deletePaysheetType(@Param('id') id: string) {
     return await this.paysheetService.deletePaysheetType(id);
+  }
+
+  @Roles('Administrativo')
+  @Get('novelty')
+  async getAllNovelties() {
+    return await this.paysheetService.getAllNovelties();
+  }
+
+  @Post('novelty')
+  async saveNovelty(@Body() body: NoveltyDto) {
+    return await this.paysheetService.saveNovelty(body);
+  }
+
+  @Put('novelty/:id')
+  async updateNovelty(@Body() body: NoveltyDto, @Param('id') id: string) {
+    return await this.paysheetService.updateNovelty(body, id);
+  }
+
+  @Delete('novelty/:id')
+  async deleteNovelty(@Param('id') id: string) {
+    return await this.paysheetService.deleteNovelty(id);
+  }
+
+  @Roles('Administrativo')
+  @Get('conceptType')
+  async getAllConceptsTypes() {
+    return await this.paysheetService.getAllConceptsTypes();
+  }
+
+  @Post('conceptType')
+  async saveConceptType(@Body() body: ConceptTypeDto) {
+    return await this.paysheetService.saveConceptType(body);
+  }
+
+  @Put('conceptType/:id')
+  async updateConceptType(
+    @Body() body: ConceptTypeDto,
+    @Param('id') id: string,
+  ) {
+    return await this.paysheetService.updateConceptType(body, id);
+  }
+
+  @Delete('conceptType/:id')
+  async deleteConceptType(@Param('id') id: string) {
+    return await this.paysheetService.deleteConceptType(id);
+  }
+
+  @Roles('Administrativo')
+  @Get('concept')
+  async getAllConcepts() {
+    return await this.paysheetService.getAllConcepts();
+  }
+
+  @Post('concept')
+  async saveConcept(@Body() body: ConceptDto) {
+    return await this.paysheetService.saveConcept(body);
+  }
+
+  @Put('concept/:id')
+  async updateConcept(@Body() body: ConceptDto, @Param('id') id: string) {
+    return await this.paysheetService.updateConcept(body, id);
+  }
+
+  @Delete('concept/:id')
+  async deleteConcept(@Param('id') id: string) {
+    return await this.paysheetService.deleteConcept(id);
+  }
+
+  @Roles('Administrativo')
+  @Get('payment')
+  async getAllPayments() {
+    return await this.paysheetService.getAllPayments();
+  }
+
+  @Post('payment')
+  async savePayment(@Body() body: PaymentDto) {
+    return await this.paysheetService.savePayment(body);
+  }
+
+  @Put('payment/:id')
+  async updatePayment(@Body() body: PaymentDto, @Param('id') id: string) {
+    return await this.paysheetService.updatePayment(body, id);
+  }
+
+  @Delete('payment/:id')
+  async deletePayment(@Param('id') id: string) {
+    return await this.paysheetService.deletePayment(id);
   }
 }
