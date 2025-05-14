@@ -7,6 +7,7 @@ import {
   Put,
   Delete,
   Param,
+  Query,
 } from '@nestjs/common';
 import { AuthGuard } from '../auth/guards';
 import { PaysheetService } from './paysheet.service';
@@ -22,7 +23,8 @@ import {
   PaysheetDto,
   PaysheetTypeDto,
 } from './dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { NoveltyType } from './types';
 
 @Controller('paysheet')
 @ApiTags('paysheet')
@@ -39,13 +41,13 @@ export class PaysheetController {
     return await this.paysheetService.getJobPositionById(id);
   }
 
-  @UseGuards(AuthGuard)
+   
   @Post('jobPosition')
   async saveJobPosition(@Body() body: JobPositionDto) {
     return await this.paysheetService.saveJobPosition(body);
   }
 
-  @UseGuards(AuthGuard)
+   
   @Put('jobPosition/:id')
   async updateJobPosition(
     @Body() body: JobPositionDto,
@@ -54,37 +56,34 @@ export class PaysheetController {
     return await this.paysheetService.updateJobPosition(body, id);
   }
 
-  @UseGuards(AuthGuard)
+   
   @Delete('jobPosition/:id')
   async deleteJobPosition(@Param('id') id: string) {
     return await this.paysheetService.deleteJobPosition(id);
   }
 
-  @Roles('Administrativo')
   @Get('paysheet')
   async getAllPaysheet() {
     return await this.paysheetService.getAllPaysheet();
   }
 
-  @UseGuards(AuthGuard)
+   
   @Get('paysheet/userId')
   async getPaysheetByUserId(@GetUser() user: UserAcountType) {
     return await this.paysheetService.getPaysheetByUserId(user.userId);
   }
 
-  @Roles('Administrativo')
   @Put('paysheet/:id')
   async updatePaysheet(@Body() body: PaysheetDto, @Param('id') id: string) {
     return await this.paysheetService.updatePaysheet(body, id);
   }
 
-  @UseGuards(AuthGuard)
+   
   @Post('paysheet')
   async makePaysheet(@Body() body: PaysheetDto) {
     return await this.paysheetService.makePaysheet(body);
   }
 
-  @Roles('Administrativo')
   @Delete('paysheet/:id')
   async deletePaysheet(@Param('id') id: string) {
     return await this.paysheetService.deletePaysheet(id);
@@ -100,13 +99,13 @@ export class PaysheetController {
     return await this.paysheetService.getContractTypeById(id);
   }
 
-  @UseGuards(AuthGuard)
+   
   @Post('contractType')
   async saveContractType(@Body() body: ContractTypeDto) {
     return await this.paysheetService.saveContractType(body);
   }
 
-  @UseGuards(AuthGuard)
+   
   @Put('contractType/:id')
   async updateContractType(
     @Body() body: ContractTypeDto,
@@ -115,7 +114,7 @@ export class PaysheetController {
     return await this.paysheetService.updateContractType(body, id);
   }
 
-  @UseGuards(AuthGuard)
+   
   @Delete('contractType/:id')
   async deleteContractType(@Param('id') id: string) {
     return await this.paysheetService.deleteContractType(id);
@@ -131,13 +130,13 @@ export class PaysheetController {
     return await this.paysheetService.getPaysheetTypeById(id);
   }
 
-  @UseGuards(AuthGuard)
+   
   @Post('paysheetType')
   async savePaysheetType(@Body() body: PaysheetTypeDto) {
     return await this.paysheetService.savePaysheetType(body);
   }
 
-  @UseGuards(AuthGuard)
+   
   @Put('paysheetType/:id')
   async updatePaysheetType(
     @Body() body: PaysheetTypeDto,
@@ -146,18 +145,47 @@ export class PaysheetController {
     return await this.paysheetService.updatePaysheetType(body, id);
   }
 
-  @UseGuards(AuthGuard)
   @Delete('paysheetType/:id')
   async deletePaysheetType(@Param('id') id: string) {
     return await this.paysheetService.deletePaysheetType(id);
   }
 
-  @Roles('Administrativo')
   @Get('novelty')
-  async getAllNovelties() {
-    return await this.paysheetService.getAllNovelties();
+  @ApiQuery({
+    name: 'date',
+    required: false,
+    description: 'Fecha de la novedad',
+    type: String,
+  })
+  async getAllNovelties(@Query('date') date: string) {
+    if (!date) return await this.paysheetService.getAllNovelties();
+    return await this.paysheetService.getNoveltiesByDate(date);
   }
 
+  @Get('novelty/id/:id')
+  async getNoveltyById(@Param('id') id: string) {
+    return await this.paysheetService.getNoveltyById(id);
+  }
+
+  @Get('novelty/contractId/:contractId')
+  @ApiQuery({
+    name: 'date',
+    required: false,
+    description: 'Fecha de la novedad',
+    type: String,
+  })
+  async getNoveltiesByContractIdAndDates(
+    @Param('contractId') contractId: string,
+    @Query('date') date: string,
+  ): Promise<NoveltyType[]> {
+    if (!date) {
+      return await this.paysheetService.getNoveltiesByContractId(contractId);
+    }
+    return await this.paysheetService.getNoveltiesByDateAndContractId(
+      date,
+      contractId,
+    );
+  }
   @Post('novelty')
   async saveNovelty(@Body() body: NoveltyDto) {
     return await this.paysheetService.saveNovelty(body);
@@ -173,10 +201,14 @@ export class PaysheetController {
     return await this.paysheetService.deleteNovelty(id);
   }
 
-  @Roles('Administrativo')
   @Get('conceptType')
   async getAllConceptsTypes() {
     return await this.paysheetService.getAllConceptsTypes();
+  }
+
+  @Get('conceptType/:id')
+  async getConceptTypeById(@Param('id') id: string) {
+    return await this.paysheetService.getConceptTypeById(id);
   }
 
   @Post('conceptType')
@@ -197,10 +229,14 @@ export class PaysheetController {
     return await this.paysheetService.deleteConceptType(id);
   }
 
-  @Roles('Administrativo')
   @Get('concept')
   async getAllConcepts() {
     return await this.paysheetService.getAllConcepts();
+  }
+
+  @Get('concept/:id')
+  async getConceptById(@Param('id') id: string) {
+    return await this.paysheetService.getConceptById(id);
   }
 
   @Post('concept')
@@ -218,10 +254,37 @@ export class PaysheetController {
     return await this.paysheetService.deleteConcept(id);
   }
 
-  @Roles('Administrativo')
   @Get('payment')
-  async getAllPayments() {
+  @ApiQuery({
+    name: 'startDate',
+    required: false,
+    description: 'Fecha de inicio del rango de pagos',
+    type: String,
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: false,
+    description: 'Fecha de fin del rango de pagos',
+    type: String,
+  })
+  async getAllPayments(
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+  ) {
+    if (startDate && endDate) {
+      return await this.paysheetService.getPaymentsByDates(startDate, endDate);
+    }
     return await this.paysheetService.getAllPayments();
+  }
+
+  @Get('payment/:id')
+  async getPaymentById(@Param('id') id: string) {
+    return await this.paysheetService.getPaymentById(id);
+  }
+
+  @Get('payment/userId/:userId')
+  async getPaymentsByUserId(@Param('userId') userId: string) {
+    return await this.paysheetService.getPaymentsByUserId(userId);
   }
 
   @Post('payment')

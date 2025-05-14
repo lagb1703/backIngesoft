@@ -72,4 +72,13 @@ export class NoveltyDto {
   @IsInt()
   @Min(0)
   value?: number;
+
+  @ApiProperty({
+    description: 'tipo de contrato, puede ser nulo',
+    example: 3,
+  })
+  @IsNotEmpty()
+  @IsInt()
+  @Min(1)
+  contractId: number;
 }

@@ -94,9 +94,84 @@ export enum PaysheetSql {
       ntn."nombre" as "name",
       lower(ntn."rango") as "dateLower",
       upper(ntn."rango") as "dateUpper",
-      ntn."valor" as "value"
+      ntn."valor" as "value",
+      ntn."contratoNomina_id" as "contractId",
+      utp."nombres" || utp."apellidos" as "name"
     FROM nominas."TB_Novedades" ntn
+    LEFT JOIN nominas."TB_ContratoNomina" ntcn
+    ON ntcn."contratoNomina_id" = ntn."contratoNomina_id"
+    LEFT JOIN usuarios."TB_Personales" utp
+    ON utp."personal_id" = ntcn."personal_id"
     ORDER BY ntn."nombre" ASC 
+  `,
+
+  getNoveltyById = `
+    SELECT 
+      ntn."novedad_id" as "noveltyId",
+      ntn."nombre" as "name",
+      lower(ntn."rango") as "dateLower",
+      upper(ntn."rango") as "dateUpper",
+      ntn."valor" as "value",
+      ntn."contratoNomina_id" as "contractId",
+      utp."nombres" || utp."apellidos" as "name"
+    FROM nominas."TB_Novedades" ntn
+    LEFT JOIN nominas."TB_ContratoNomina" ntcn
+    ON ntcn."contratoNomina_id" = ntn."contratoNomina_id"
+    LEFT JOIN usuarios."TB_Personales" utp
+    ON utp."personal_id" = ntcn."personal_id"
+    WHERE ntn."novedad_id" = $1
+  `,
+
+  getNoveltiesByDate = `
+    SELECT 
+      ntn."novedad_id" as "noveltyId",
+      ntn."nombre" as "name",
+      lower(ntn."rango") as "dateLower",
+      upper(ntn."rango") as "dateUpper",
+      ntn."valor" as "value",
+      ntn."contratoNomina_id" as "contractId",
+      utp."nombres" || utp."apellidos" as "name"
+    FROM nominas."TB_Novedades" ntn
+    LEFT JOIN nominas."TB_ContratoNomina" ntcn
+    ON ntcn."contratoNomina_id" = ntn."contratoNomina_id"
+    LEFT JOIN usuarios."TB_Personales" utp
+    ON utp."personal_id" = ntcn."personal_id"
+    WHERE CAST($1 AS DATE) <@ ntn."rango"
+  `,
+
+  getNoveltiesByContractId = `
+    SELECT 
+      ntn."novedad_id" as "noveltyId",
+      ntn."nombre" as "name",
+      lower(ntn."rango") as "dateLower",
+      upper(ntn."rango") as "dateUpper",
+      ntn."valor" as "value",
+      ntn."contratoNomina_id" as "contractId",
+      utp."nombres" || ' ' || utp."apellidos" as "name"
+    FROM nominas."TB_Novedades" ntn
+    LEFT JOIN nominas."TB_ContratoNomina" ntcn
+    ON ntcn."contratoNomina_id" = ntn."contratoNomina_id"
+    LEFT JOIN usuarios."TB_Personales" utp
+    ON utp."personal_id" = ntcn."personal_id"
+    WHERE ntn."contratoNomina_id" = $1
+  `,
+
+  getNoveltiesByDateAndContractId = `
+    SELECT 
+      ntn."novedad_id" as "noveltyId",
+      ntn."nombre" as "name",
+      lower(ntn."rango") as "dateLower",
+      upper(ntn."rango") as "dateUpper",
+      ntn."valor" as "value",
+      ntn."contratoNomina_id" as "contractId",
+      utp."nombres" || ' ' || utp."apellidos" as "name"
+    FROM nominas."TB_Novedades" ntn
+    LEFT JOIN nominas."TB_ContratoNomina" ntcn
+    ON ntcn."contratoNomina_id" = ntn."contratoNomina_id"
+    LEFT JOIN usuarios."TB_Personales" utp
+    ON utp."personal_id" = ntcn."personal_id"
+    WHERE CAST($1 AS DATE) <@ ntn."rango" AND
+      ntn."contratoNomina_id" = $2
   `,
 
   getAllConceptsTypes = `
@@ -110,13 +185,34 @@ export enum PaysheetSql {
     ORDER BY nttc."tipoConcepto" ASC
   `,
 
+  getConceptTypeById = `
+    SELECT 
+      nttc."tipoConcepto_id" as "conceptTypeId",
+      nttc."tipoConcepto" as "conceptType",
+      lower(nttc."minMaxRange") as "minValue",
+      upper(nttc."minMaxRange") as "maxValue",
+      cast(nttc."porcentaje" as integer) as "percentage"
+    FROM nominas."TB_TipoConcepto" nttc
+    WHERE nttc."tipoConcepto_id" = $1
+  `,
+
   getAllConcepts = `
     SELECT 
       ntc."concepto_id" as "conceptId",
       ntc."tipoConcepto_id" as "conceptTypeId",
       ntc."ciudad_id" as "cityId",
       ntc."empresa_id" as "companyId"
-    FROM nominas."TB_Concepto" ntc;
+    FROM nominas."TB_Concepto" ntc
+  `,
+
+  getConceptById = `
+    SELECT 
+      ntc."concepto_id" as "conceptId",
+      ntc."tipoConcepto_id" as "conceptTypeId",
+      ntc."ciudad_id" as "cityId",
+      ntc."empresa_id" as "companyId"
+    FROM nominas."TB_Concepto" ntc
+    WHERE ntc."concepto_id" = $1
   `,
 
   getAllPayments = `
@@ -130,6 +226,45 @@ export enum PaysheetSql {
       ntp."personal_id" as "userId"
     FROM nominas."TB_Pagos" ntp
     ORDER BY ntp."fechaPago" ASC 
+  `,
+
+  getPaymentById = `
+    SELECT 
+      ntp."pago_id" as "payment_id",
+      ntp."archivo_id" as "fileId",
+      ntp."fechaPago" as "paymentTimestamp",
+      ntp."novedad_id" as "noveltyId",
+      ntp."contratoNomina_id" as "contractId",
+      ntp."concepto_id" as "conceptId",
+      ntp."personal_id" as "userId"
+    FROM nominas."TB_Pagos" ntp
+    WHERE ntp."pago_id" = $1
+  `,
+
+  getPaymentsByDates = `
+    SELECT 
+      ntp."pago_id" as "payment_id",
+      ntp."archivo_id" as "fileId",
+      ntp."fechaPago" as "paymentTimestamp",
+      ntp."novedad_id" as "noveltyId",
+      ntp."contratoNomina_id" as "contractId",
+      ntp."concepto_id" as "conceptId",
+      ntp."personal_id" as "userId"
+    FROM nominas."TB_Pagos" ntp
+    WHERE CAST(ntp."fechaPago" AS DATE) <@ daterange(CAST($1 AS DATE), CAST($2 AS DATE), '[]')
+  `,
+
+  getPaymentsByUserId = `
+    SELECT 
+      ntp."pago_id" as "payment_id",
+      ntp."archivo_id" as "fileId",
+      ntp."fechaPago" as "paymentTimestamp",
+      ntp."novedad_id" as "noveltyId",
+      ntp."contratoNomina_id" as "contractId",
+      ntp."concepto_id" as "conceptId",
+      ntp."personal_id" as "userId"
+    FROM nominas."TB_Pagos" ntp
+    WHERE ntp."personal_id" = $1
   `,
 
   /**

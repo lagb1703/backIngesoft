@@ -418,6 +418,84 @@ export class PaysheetService {
   }
 
   /**
+   * Esta funcion obtiene una novedad por su id.
+   * @param id el id de la novedad a buscar
+   * @returns la novedad que corresponde al id
+   */
+  async getNoveltyById(id: string): Promise<NoveltyType> {
+    try {
+      return (
+        await this.plpgsqlService.executeQuery<NoveltyType>(
+          PaysheetSql.getNoveltyById,
+          [id],
+        )
+      )[0];
+    } catch (error) {
+      this.logger.error('Error fetching novelty by ID', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion obtiene todas las novedades que tengan adentro un rango de fechas.
+   * @param date fecha de la novedad a buscar
+   * @returns las novedades que tengan adentro ese rango de fechas
+   * @throws Error si ocurre un error al ejecutar la consulta.
+   */
+  async getNoveltiesByDate(date: string): Promise<NoveltyType[]> {
+    try {
+      return await this.plpgsqlService.executeQuery<NoveltyType>(
+        PaysheetSql.getNoveltiesByDate,
+        [date],
+      );
+    } catch (error) {
+      this.logger.error('Error fetching novelties by date', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion obtiene todas las novedades que esten enlazadas a un contrato.
+   * @param contractId el id del contrato a buscar
+   * @returns las novedades enlazadas a ese contrato
+   */
+  async getNoveltiesByContractId(contractId: string): Promise<NoveltyType[]> {
+    try {
+      return await this.plpgsqlService.executeQuery<NoveltyType>(
+        PaysheetSql.getNoveltiesByContractId,
+        [contractId],
+      );
+    } catch (error) {
+      this.logger.error('Error fetching novelties by contract ID', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion obtiene todas las novedades que tengan adentro un rango de fechas y que pertenezcan a un contrato.
+   * @param date fecha de la novedad a buscar
+   * @param contractId contrato al que pertenece la novedad
+   * @returns Todas las novedades que tengan adentro ese rango de fechas y que pertenezcan a un contrato
+   */
+  async getNoveltiesByDateAndContractId(
+    date: string,
+    contractId: string,
+  ): Promise<NoveltyType[]> {
+    try {
+      return await this.plpgsqlService.executeQuery<NoveltyType>(
+        PaysheetSql.getNoveltiesByDateAndContractId,
+        [date, contractId],
+      );
+    } catch (error) {
+      this.logger.error(
+        'Error fetching novelties by date and contract ID',
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
    * Esta funcion obtiene todos los tipos de concepto de la base de datos postgress.
    * @returns todos los tipos de concepto de la base de datos postgress.
    */
@@ -429,6 +507,25 @@ export class PaysheetService {
       );
     } catch (error) {
       this.logger.error('Error fetching all concept types', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion obtiene un tipo de concepto por su id.
+   * @param id id del tipo de concepto a buscar
+   * @returns el tipo de concepto que corresponde al id
+   */
+  async getConceptTypeById(id: string): Promise<ConceptTypeType> {
+    try {
+      return (
+        await this.plpgsqlService.executeQuery<ConceptTypeType>(
+          PaysheetSql.getConceptTypeById,
+          [id],
+        )
+      )[0];
+    } catch (error) {
+      this.logger.error('Error fetching concept type by ID', error);
       throw error;
     }
   }
@@ -450,6 +547,26 @@ export class PaysheetService {
   }
 
   /**
+   * Esta funcion obtiene un concepto por su id.
+   * @param id id del concepto a buscar
+   * @returns concepto que corresponde al id
+   * @throws Error si ocurre un error al ejecutar la consulta.
+   */
+  async getConceptById(id: string): Promise<ConceptType> {
+    try {
+      return (
+        await this.plpgsqlService.executeQuery<ConceptType>(
+          PaysheetSql.getConceptById,
+          [id],
+        )
+      )[0];
+    } catch (error) {
+      this.logger.error('Error fetching concept by ID', error);
+      throw error;
+    }
+  }
+
+  /**
    * Esta funcion obtiene todos los pagos de la base de datos postgress.
    * @returns todos los pagos de la base de datos postgress.
    */
@@ -461,6 +578,63 @@ export class PaysheetService {
       );
     } catch (error) {
       this.logger.error('Error fetching all payments', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion obtiene un pago por su id.
+   * @param id id del pago a buscar
+   * @returns el pago que corresponde al id
+   */
+  async getPaymentById(id: string): Promise<PaymentType> {
+    try {
+      return (
+        await this.plpgsqlService.executeQuery<PaymentType>(
+          PaysheetSql.getPaymentById,
+          [id],
+        )
+      )[0];
+    } catch (error) {
+      this.logger.error('Error fetching payment by ID', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion obtiene todos los pagos que tengan adentro un rango de fechas.
+   * @param startDate fecha de inicio del rango de fechas
+   * @param endDate fecha de fin del rango de fechas
+   * @returns todos los pagos que tengan adentro ese rango de fechas
+   */
+  async getPaymentsByDates(
+    startDate: string,
+    endDate: string,
+  ): Promise<PaymentType[]> {
+    try {
+      return await this.plpgsqlService.executeQuery<PaymentType>(
+        PaysheetSql.getPaymentsByDates,
+        [startDate, endDate],
+      );
+    } catch (error) {
+      this.logger.error('Error fetching payments by dates', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion obtiene todos los pagos que le pertenecen a un usuario.
+   * @param userId el id del usuario a buscar
+   * @returns todos los pagos que le pertenecen al usuario
+   */
+  async getPaymentsByUserId(userId: string): Promise<PaymentType[]> {
+    try {
+      return await this.plpgsqlService.executeQuery<PaymentType>(
+        PaysheetSql.getPaymentsByUserId,
+        [userId],
+      );
+    } catch (error) {
+      this.logger.error('Error fetching payments by user ID', error);
       throw error;
     }
   }

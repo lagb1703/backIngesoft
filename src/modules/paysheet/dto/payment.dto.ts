@@ -26,7 +26,7 @@ export class PaymentDto {
 
   @ApiProperty({
     description: 'ID de la novedad a pagar(puede ser nulo)',
-    example: 5,
+    example: 6,
   })
   @IsOptional()
   @IsInt()

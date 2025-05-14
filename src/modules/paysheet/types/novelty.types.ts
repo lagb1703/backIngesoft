@@ -4,4 +4,5 @@ export type NoveltyType = {
   dateUpper: string;
   dateLower: string;
   value: number;
+  contract: number;
 };
