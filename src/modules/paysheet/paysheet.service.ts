@@ -639,6 +639,30 @@ export class PaysheetService {
     }
   }
 
+  async getAllUnPayments() {
+    try {
+      return await this.plpgsqlService.executeQuery<any>(
+        PaysheetSql.getAllUnPayments,
+        [],
+      );
+    } catch (error) {
+      this.logger.error('Error fetching next payments', error);
+      throw error;
+    }
+  }
+
+  async getAllUnPaymentsByUserId(userId: string | number) {
+    try {
+      return await this.plpgsqlService.executeQuery<any>(
+        PaysheetSql.getAllUnPaymentsByUserId,
+        [userId],
+      );
+    } catch (error) {
+      this.logger.error('Error fetching next payments', error);
+      throw error;
+    }
+  }
+
   /**
    * Esta funcion guarda una novedad en la base de datos postgress.
    * @param novelty la novedad a guardar en la base de datos.

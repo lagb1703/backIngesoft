@@ -41,13 +41,11 @@ export class PaysheetController {
     return await this.paysheetService.getJobPositionById(id);
   }
 
-   
   @Post('jobPosition')
   async saveJobPosition(@Body() body: JobPositionDto) {
     return await this.paysheetService.saveJobPosition(body);
   }
 
-   
   @Put('jobPosition/:id')
   async updateJobPosition(
     @Body() body: JobPositionDto,
@@ -56,7 +54,6 @@ export class PaysheetController {
     return await this.paysheetService.updateJobPosition(body, id);
   }
 
-   
   @Delete('jobPosition/:id')
   async deleteJobPosition(@Param('id') id: string) {
     return await this.paysheetService.deleteJobPosition(id);
@@ -67,7 +64,7 @@ export class PaysheetController {
     return await this.paysheetService.getAllPaysheet();
   }
 
-   
+  @UseGuards(AuthGuard)
   @Get('paysheet/userId')
   async getPaysheetByUserId(@GetUser() user: UserAcountType) {
     return await this.paysheetService.getPaysheetByUserId(user.userId);
@@ -78,7 +75,6 @@ export class PaysheetController {
     return await this.paysheetService.updatePaysheet(body, id);
   }
 
-   
   @Post('paysheet')
   async makePaysheet(@Body() body: PaysheetDto) {
     return await this.paysheetService.makePaysheet(body);
@@ -99,13 +95,11 @@ export class PaysheetController {
     return await this.paysheetService.getContractTypeById(id);
   }
 
-   
   @Post('contractType')
   async saveContractType(@Body() body: ContractTypeDto) {
     return await this.paysheetService.saveContractType(body);
   }
 
-   
   @Put('contractType/:id')
   async updateContractType(
     @Body() body: ContractTypeDto,
@@ -114,7 +108,6 @@ export class PaysheetController {
     return await this.paysheetService.updateContractType(body, id);
   }
 
-   
   @Delete('contractType/:id')
   async deleteContractType(@Param('id') id: string) {
     return await this.paysheetService.deleteContractType(id);
@@ -130,13 +123,11 @@ export class PaysheetController {
     return await this.paysheetService.getPaysheetTypeById(id);
   }
 
-   
   @Post('paysheetType')
   async savePaysheetType(@Body() body: PaysheetTypeDto) {
     return await this.paysheetService.savePaysheetType(body);
   }
 
-   
   @Put('paysheetType/:id')
   async updatePaysheetType(
     @Body() body: PaysheetTypeDto,
@@ -252,6 +243,22 @@ export class PaysheetController {
   @Delete('concept/:id')
   async deleteConcept(@Param('id') id: string) {
     return await this.paysheetService.deleteConcept(id);
+  }
+
+  @Get('unPayments')
+  async getAllUnPayments() {
+    return await this.paysheetService.getAllUnPayments();
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('unPayments/userId')
+  async getUnPaymentsByUser(@GetUser() user: UserAcountType) {
+    return await this.paysheetService.getAllUnPaymentsByUserId(user.userId);
+  }
+
+  @Get('unPayments/userId/:id')
+  async getUnPaymentsByUserId(@Param('id') id: string) {
+    return await this.paysheetService.getAllUnPaymentsByUserId(id);
   }
 
   @Get('payment')

@@ -267,6 +267,95 @@ export enum PaysheetSql {
     WHERE ntp."personal_id" = $1
   `,
 
+  getAllUnPayments = `
+    WITH 
+      "novedadesActuales" AS (
+        SELECT 
+          ntn."novedad_id" as "noveltyId",
+          ntn."porcentaje" as "percentage",
+          ntn."valor" as "value",
+          ntn."contratoNomina_id"
+        FROM nominas."TB_Novedades" ntn
+        WHERE CURRENT_DATE <@ ntn."rango"
+      ),
+      "pagosActuales" AS (
+        SELECT 
+          ntp."contratoNomina_id"
+        FROM nominas."TB_Pagos" ntp
+        WHERE EXTRACT(MONTH FROM ntp."fechaPago") = EXTRACT(MONTH FROM CURRENT_DATE)
+      )
+    SELECT 
+      utp."personal_id" as "userId",
+      utp."nombres" || ' ' || utp."apellidos" as "name",
+      utp."cuenta" as "account",
+      utp."identificacion" as "identificacion",
+      utp."mediopago_id" as "meansOfPaymentId",
+      SUM(ntcn."salario") as "salary",
+      json_agg(nttn."diaPago") AS "payDay",
+      json_agg(json_build_object('noveltyId', na."noveltyId", 'percentage', na."percentage", 'value', na."value"))
+      FILTER (WHERE ntcn."contratoNomina_id" = na."contratoNomina_id") as "novedades"
+    FROM usuarios."TB_Personales" utp
+    INNER JOIN nominas."TB_ContratoNomina" ntcn
+      ON utp."personal_id" = ntcn."personal_id"
+    LEFT JOIN nominas."TB_TipoNomina" nttn
+      ON nttn."tipoNomina_id" = ntcn."tipoNomina_id"
+    LEFT JOIN "novedadesActuales" na
+      ON ntcn."contratoNomina_id" = na."contratoNomina_id"
+    LEFT JOIN "pagosActuales" pa
+      ON ntcn."contratoNomina_id" = pa."contratoNomina_id"
+    WHERE 
+      CURRENT_DATE <@ utp."fechaingreso" AND
+      CURRENT_DATE <@ ntcn."fecha" AND
+      pa."contratoNomina_id" IS NULL AND
+      EXTRACT(DAY FROM CURRENT_DATE) BETWEEN 1 AND nttn."diaPago"
+    GROUP BY utp."personal_id"
+  `,
+
+  getAllUnPaymentsByUserId = `
+    WITH 
+      "novedadesActuales" AS (
+      SELECT 
+        ntn."novedad_id" as "noveltyId",
+        ntn."porcentaje" as "percentage",
+        ntn."valor" as "value",
+        ntn."contratoNomina_id"
+      FROM nominas."TB_Novedades" ntn
+      WHERE CURRENT_DATE <@ ntn."rango"
+      ),
+      "pagosActuales" AS (
+      SELECT 
+        ntp."contratoNomina_id"
+      FROM nominas."TB_Pagos" ntp
+      WHERE EXTRACT(MONTH FROM ntp."fechaPago") = EXTRACT(MONTH FROM CURRENT_DATE)
+      )
+    SELECT 
+      utp."personal_id" as "userId",
+      utp."nombres" || ' ' || utp."apellidos" as "name",
+      utp."cuenta" as "account",
+      utp."identificacion" as "identificacion",
+      utp."mediopago_id" as "meansOfPaymentId",
+      ntcn."salario" as "salary",
+      nttn."diaPago" AS "payDay",
+      json_agg(json_build_object('noveltyId', na."noveltyId", 'percentage', na."percentage", 'value', na."value"))
+      FILTER (WHERE ntcn."contratoNomina_id" = na."contratoNomina_id") as "novedades"
+    FROM usuarios."TB_Personales" utp
+    INNER JOIN nominas."TB_ContratoNomina" ntcn
+      ON utp."personal_id" = ntcn."personal_id"
+    LEFT JOIN nominas."TB_TipoNomina" nttn
+      ON nttn."tipoNomina_id" = ntcn."tipoNomina_id"
+    LEFT JOIN "novedadesActuales" na
+      ON ntcn."contratoNomina_id" = na."contratoNomina_id"
+    LEFT JOIN "pagosActuales" pa
+      ON ntcn."contratoNomina_id" = pa."contratoNomina_id"
+    WHERE 
+      CURRENT_DATE <@ utp."fechaingreso" AND
+      CURRENT_DATE <@ ntcn."fecha" AND
+      pa."contratoNomina_id" IS NULL AND
+      EXTRACT(DAY FROM CURRENT_DATE) BETWEEN 1 AND nttn."diaPago" AND
+      utp."personal_id" = $1
+    GROUP BY utp."personal_id", ntcn."contratoNomina_id", nttn."diaPago"
+  `,
+
   /**
    * @Actions Seccion solo para las consultas de tipo
    * INSERT, UPDATE, DELETE, POCEDURES
