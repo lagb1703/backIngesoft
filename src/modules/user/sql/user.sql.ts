@@ -157,7 +157,7 @@ export enum UserSql {
         ORDER BY "personalArchivo_id" ASC
     `,
 
-    getAllUserFilesByUserId = `
+  getAllUserFilesByUserId = `
         SELECT 
             tpa."personalArchivo_id" as "fileUserId",
             tpa."personal_id" as "userId",
@@ -171,7 +171,7 @@ export enum UserSql {
         ORDER BY tpa."archivo_id" ASC
     `,
 
-    getUserFilesByUserIdAndFileId = `
+  getUserFilesByUserIdAndFileId = `
         SELECT 
             tpa."personalArchivo_id" as "fileUserId",
             tpa."personal_id" as "userId",
@@ -185,14 +185,51 @@ export enum UserSql {
         ORDER BY tpa."archivo_id" ASC
     `,
 
+  getAllFaults = `
+        SELECT 
+            utf."falta_id" "foultId",
+            lower(utf."fecha") as "startDate",
+            upper(utf."fecha") as "endDate",
+            utf."justificación" as "justification",
+            utf."personal_id" as "userId"
+        FROM usuarios."TB_Faltas" utf
+        ORDER BY upper(utf."fecha") DESC
+    `,
+
+  getFaultById = `
+        SELECT 
+            utf."falta_id" "foultId",
+            lower(utf."fecha") as "startDate",
+            upper(utf."fecha") as "endDate",
+            utf."justificación" as "justification",
+            utf."personal_id" as "userId"
+        FROM usuarios."TB_Faltas" utf
+        WHERE utf."falta_id" = $1
+        ORDER BY upper(utf."fecha") DESC
+    `,
+  getFaultsByUserId = `
+        SELECT 
+            utf."falta_id" "foultId",
+            lower(utf."fecha") as "startDate",
+            upper(utf."fecha") as "endDate",
+            utf."justificación" as "justification",
+            utf."personal_id" as "userId"
+        FROM usuarios."TB_Faltas" utf
+        WHERE utf."personal_id" = $1
+        ORDER BY upper(utf."fecha") DESC
+    `,
+
   /**
    * @Actions Seccion solo para las consultas de tipo
    * INSERT, UPDATE, DELETE, POCEDURES
    */
 
   saveUser = `call usuarios."SP_USUARIOSPKG_AGREGARUSUARIO"($1, $2)`,
+  saveFault = `call usuarios."SP_USUARIOSPKG_AGREGARFALTA"($1, $2)`,
   updateUser = `call usuarios."SP_USUARIOSPKG_EDITARUSUARIO"($1, $2)`,
+  updateFault = `call usuarios."SP_USUARIOSPKG_EDITARFALTA"($1, $2)`,
   deleteUser = `call usuarios."SP_USUARIOSPKG_ELIMINARUSUARIO"($1)`,
+  deleteFault = `call usuarios."SP_USUARIOSPKG_ELIMINARFALTA"($1)`,
   saveFileUserType = `call usuarios."SP_USUARIOSPKG_AGREGARTIPOARCHIVO"($1, $2)`,
   updateFileUserType = `call usuarios."SP_USUARIOSPKG_EDITARTIPOARCHIVO"($1, $2)`,
   deleteFileUserType = `call usuarios."SP_USUARIOSPKG_ELIMINARTIPOARCHIVO"($1)`,

@@ -20,3 +20,11 @@ export type User = {
     personStateId: number,
     meansOfPayment: number,
 } & UserAcountType;
+
+export type FaultType = {
+    faultId: number,
+    userId: number,
+    startDate: string,
+    endDate: string,
+    justification: string,
+}

@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { PlpgsqlService } from 'src/newCore/database/services';
 import { MailsService } from '../mails/mails.service';
-import { FileUserDto, FileUserTypeDto, UserDto } from './dtos';
+import { FaultDto, FileUserDto, FileUserTypeDto, UserDto } from './dtos';
 import {
   UserAcountType,
   RoleType,
@@ -15,6 +15,7 @@ import {
   IdentificationType,
   FileUserTypeType,
   FileUserType,
+  FaultType,
 } from './types';
 import { UserSql } from './sql/user.sql';
 import { hash } from 'bcrypt';
@@ -598,6 +599,89 @@ export class UserService {
       await this.filesService.deleteFile(fileId);
     } catch (error) {
       this.logger.error('Error al eliminar el archivo de usuario', error);
+      throw error;
+    }
+  }
+
+  async getAllFaults(): Promise<FaultType[]> {
+    try {
+      return await this.plpgsqlService.executeQuery<FaultType>(
+        UserSql.getAllFaults,
+        [],
+      );
+    } catch (error) {
+      this.logger.error('Error al obtener todas las faltas', error);
+      throw error;
+    }
+  }
+
+  async getFaultById(faultId: string): Promise<FaultType> {
+    try {
+      return (
+        await this.plpgsqlService.executeQuery<FaultType>(
+          UserSql.getFaultById,
+          [Number(faultId)],
+        )
+      )[0];
+    } catch (error) {
+      this.logger.error('Error al obtener la falta por ID', error);
+      throw error;
+    }
+  }
+
+  async getFaultsByUserId(userId: string | number): Promise<FaultType[]> {
+    try {
+      return await this.plpgsqlService.executeQuery<FaultType>(
+        UserSql.getFaultsByUserId,
+        [Number(userId)],
+      );
+    } catch (error) {
+      this.logger.error('Error al obtener las faltas por ID de usuario', error);
+      throw error;
+    }
+  }
+
+  async saveFault(fault: FaultDto): Promise<number> {
+    try {
+      fault.date = `[${fault.startDate},${fault.endDate}]`;
+      delete fault.startDate;
+      delete fault.endDate;
+      return (
+        await this.plpgsqlService.executeProcedureSave<FaultDto>(
+          UserSql.saveFault,
+          fault,
+        )
+      )['p_id'];
+    } catch (error) {
+      this.logger.error('Error al guardar la falta', error);
+      throw error;
+    }
+  }
+
+  async updateFault(faultId: string, fault: FaultDto): Promise<void> {
+    try {
+      fault.date = `[${fault.startDate},${fault.endDate}]`;
+      delete fault.startDate;
+      delete fault.endDate;
+      await this.plpgsqlService.executeProcedureUpdate<FaultDto>(
+        UserSql.updateFault,
+        fault,
+        Number(faultId),
+      );
+    } catch (error) {
+      this.logger.error('Error al actualizar la falta', error);
+      throw error;
+    }
+  }
+
+  async deleteFault(faultId: string): Promise<void> {
+    try {
+      await this.plpgsqlService.executeProcedureDelete(
+        UserSql.deleteFault,
+        Number(faultId),
+      );
+    } catch (error) {
+      this.logger.error('Error al eliminar la falta', error);
       throw error;
     }
   }

@@ -1,6 +1,9 @@
 import {
   IsBoolean,
+  IsDateString,
   IsEmail,
+  IsEmpty,
+  IsInt,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -10,6 +13,7 @@ import {
   MaxLength,
   Min,
   MinLength,
+  ValidateIf,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -147,4 +151,52 @@ export class UserDto {
   @IsNumber()
   @Min(1)
   meansOfPayment?: number;
+}
+
+export class FaultDto {
+  @ApiProperty({
+    description: 'fecha de inicio de la falta',
+    example: '2023-10-01',
+  })
+  @IsNotEmpty()
+  @IsDateString()
+  startDate?: string;
+
+  @ApiProperty({
+    description: 'fecha de inicio de la falta',
+    example: '2023-10-03',
+  })
+  @IsNotEmpty()
+  @IsDateString()
+  @ValidateIf((o: FaultDto, value: string) => {
+    const startDate = new Date(o.startDate);
+    const endDate = new Date(value);
+    return startDate.getTime() > endDate.getTime();
+  })
+  @IsNumber(
+    {},
+    { message: 'El la fecha de inicio debe ser anterior a la fecha final' },
+  )
+  endDate?: string;
+
+  @ApiProperty({
+    description: 'id del usuario',
+    example: 22,
+  })
+  @IsNotEmpty()
+  @IsInt()
+  @Min(1)
+  userId: number;
+
+  @ApiProperty({
+    description: 'justificacion de la falla si hay',
+    example: 'No me encuentro en la ciudad',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(134217728)
+  justification: string;
+
+  @IsEmpty()
+  date: string;
 }

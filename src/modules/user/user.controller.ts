@@ -15,9 +15,10 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from './../auth/guards';
 import { Roles, GetUser } from '../auth/decorators';
 import { UserService } from './user.service';
-import { UserDto } from './dtos/user.dto';
+import { FaultDto, UserDto } from './dtos/user.dto';
 import { ApiTags, ApiQuery, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import {
+  FaultType,
   FileUserType,
   FileUserTypeType,
   IdentificationType,
@@ -181,5 +182,48 @@ export class UserController {
     @GetUser() user: UserAcountType,
   ): Promise<void> {
     return await this.userService.deleteFile(fileId, user.userId);
+  }
+
+  @Get('faults')
+  async getAllFaults(): Promise<FaultType[]> {
+    return await this.userService.getAllFaults();
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('faults/userId')
+  async getFaultsByUserId(
+    @GetUser() user: UserAcountType,
+  ): Promise<FaultType[]> {
+    return await this.userService.getFaultsByUserId(user.userId);
+  }
+
+  @Get('faults/userId/:userId')
+  async getAllFaultsByUserId(
+    @Param('userId') userId: string,
+  ): Promise<FaultType[]> {
+    return await this.userService.getFaultsByUserId(userId);
+  }
+
+  @Get('faults/:faultId')
+  async getFaultById(@Param('faultId') faultId: string): Promise<FaultType> {
+    return await this.userService.getFaultById(faultId);
+  }
+
+  @Post('faults')
+  async saveFault(@Body() fault: FaultDto): Promise<number> {
+    return await this.userService.saveFault(fault);
+  }
+
+  @Put('faults/:faultId')
+  async updateFault(
+    @Param('faultId') faultId: string,
+    @Body() fault: FaultDto,
+  ): Promise<void> {
+    return await this.userService.updateFault(faultId, fault);
+  }
+
+  @Delete('faults/:faultId')
+  async deleteFault(@Param('faultId') faultId: string): Promise<void> {
+    return await this.userService.deleteFault(faultId);
   }
 }
