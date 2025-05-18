@@ -641,6 +641,23 @@ export class UserService {
     }
   }
 
+  async getCurrentsFaultsByUserId(
+    userId: string | number,
+  ): Promise<FaultType[]> {
+    try {
+      return await this.plpgsqlService.executeQuery<FaultType>(
+        UserSql.getCurrentsFaultsByUserId,
+        [userId],
+      );
+    } catch (error) {
+      this.logger.error(
+        'Error al obtener las faltas actuales por ID de usuario',
+        error,
+      );
+      throw error;
+    }
+  }
+
   async saveFault(fault: FaultDto): Promise<number> {
     try {
       fault.date = `[${fault.startDate},${fault.endDate}]`;

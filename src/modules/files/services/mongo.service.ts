@@ -104,8 +104,10 @@ export class MongoService {
     }
   }
 
-  async saveFile(fileMongo: MongoFileType): Promise<string> {
+  async saveFile(fileMongo: MongoFileType & {_id?: ObjectId}, objectId: ObjectId = null): Promise<string> {
     try {
+      if(objectId)
+        fileMongo._id = objectId ;
       return (
         await this.mongoService.insert(FilesCollection.FILES, fileMongo)
       ).toString();

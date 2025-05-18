@@ -8,6 +8,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { MongoService } from './mongo.service';
 import { MongoFileType } from '../types';
+import { ObjectId } from 'mongodb';
 @Injectable()
 export class FilesService {
   private s3: S3Client;
@@ -67,7 +68,10 @@ export class FilesService {
     }
   }
 
-  async uploadFile(file: Express.Multer.File): Promise<string> {
+  async uploadFile(
+    file: Express.Multer.File,
+    _objectId: ObjectId = null,
+  ): Promise<string> {
     let objectId: string;
     try {
       const fileHash = await this.mongoService.generateFileHash(file);
@@ -82,7 +86,7 @@ export class FilesService {
         contenedor: 's3',
         sha256: fileHash,
       };
-      objectId = await this.mongoService.saveFile(fileMongo);
+      objectId = await this.mongoService.saveFile(fileMongo, _objectId);
       const command = new PutObjectCommand({
         Bucket: this.bucketName,
         Key: `RecursosHumanos/${fileHash}`,

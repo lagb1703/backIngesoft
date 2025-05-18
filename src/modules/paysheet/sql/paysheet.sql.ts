@@ -43,7 +43,7 @@ export enum PaysheetSql {
       tcn."salario" as "salary",
       tcn."fecha" as "contractDayRange",
       tcn."archivo_id" as "fileId",
-      tcn."tipoNomina_id" as "paysheetId",
+      tcn."tipoNomina_id" as "paysheetTypeId",
       tcn."tipoContrato_id" as "contractTypeId",
       tcn."cargo_id" as "jobPositionId",
       tcn."requerimiento_id" as "requestId",
@@ -102,6 +102,24 @@ export enum PaysheetSql {
     ON ntcn."contratoNomina_id" = ntn."contratoNomina_id"
     LEFT JOIN usuarios."TB_Personales" utp
     ON utp."personal_id" = ntcn."personal_id"
+    ORDER BY ntn."nombre" ASC 
+  `,
+
+  getNoveltiesByUserId = `
+    SELECT 
+      ntn."novedad_id" as "noveltyId",
+      ntn."nombre" as "name",
+      lower(ntn."rango") as "dateLower",
+      upper(ntn."rango") as "dateUpper",
+      ntn."valor" as "value",
+      ntn."contratoNomina_id" as "contractId",
+      utp."nombres" || utp."apellidos" as "name"
+    FROM nominas."TB_Novedades" ntn
+    LEFT JOIN nominas."TB_ContratoNomina" ntcn
+    ON ntcn."contratoNomina_id" = ntn."contratoNomina_id"
+    LEFT JOIN usuarios."TB_Personales" utp
+    ON utp."personal_id" = ntcn."personal_id"
+    WHERE ntcn."personal_id" = $1
     ORDER BY ntn."nombre" ASC 
   `,
 
@@ -296,6 +314,7 @@ export enum PaysheetSql {
       utp."mediopago_id" as "meansOfPaymentId",
       ntcn."salario" as "salary",
       nttn."diaPago" AS "payDay",
+      ntcn."contratoNomina_id" as "contractId",
       json_agg(json_build_object('noveltyId', na."noveltyId", 'percentage', na."percentage", 'value', na."value"))
       FILTER (WHERE ntcn."contratoNomina_id" = na."contratoNomina_id") as "novedades"
     FROM usuarios."TB_Personales" utp

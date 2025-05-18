@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  StreamableFile,
+} from '@nestjs/common';
 import { PaysheetSql } from './sql/paysheet.sql';
 import { PlpgsqlService } from './../../newCore/database/services';
 import {
@@ -21,13 +26,20 @@ import {
   PaysheetDto,
   PaysheetTypeDto,
 } from './dto';
-import { json } from 'stream/consumers';
+import { FileGeneratorService, FilesService } from '../files/services';
+import { UserService } from '../user/user.service';
+import { ObjectId } from 'mongodb';
 
 @Injectable()
 export class PaysheetService {
   private readonly logger = new Logger(PaysheetService.name);
 
-  constructor(private readonly plpgsqlService: PlpgsqlService) {}
+  constructor(
+    private readonly plpgsqlService: PlpgsqlService,
+    private readonly fileGeneratorService: FileGeneratorService,
+    private readonly userService: UserService,
+    private readonly filesService: FilesService,
+  ) {}
 
   /**
    * Esta función obtiene todos los tipos de cargos de la base de datos.
@@ -436,6 +448,17 @@ export class PaysheetService {
     }
   }
 
+  async getNoveltiesByUserId(userId: string | number): Promise<NoveltyType[]> {
+    try {
+      return await this.plpgsqlService.executeQuery<NoveltyType>(
+        PaysheetSql.getNoveltiesByUserId,
+        [userId],
+      );
+    } catch (error) {
+      this.logger.error('Error fetching novelties by user ID', error);
+      throw error;
+    }
+  }
   /**
    * Esta funcion obtiene todas las novedades que tengan adentro un rango de fechas.
    * @param date fecha de la novedad a buscar
@@ -459,7 +482,9 @@ export class PaysheetService {
    * @param contractId el id del contrato a buscar
    * @returns las novedades enlazadas a ese contrato
    */
-  async getNoveltiesByContractId(contractId: string): Promise<NoveltyType[]> {
+  async getNoveltiesByContractId(
+    contractId: string | number,
+  ): Promise<NoveltyType[]> {
     try {
       return await this.plpgsqlService.executeQuery<NoveltyType>(
         PaysheetSql.getNoveltiesByContractId,
@@ -479,7 +504,7 @@ export class PaysheetService {
    */
   async getNoveltiesByDateAndContractId(
     date: string,
-    contractId: string,
+    contractId: string | number,
   ): Promise<NoveltyType[]> {
     try {
       return await this.plpgsqlService.executeQuery<NoveltyType>(
@@ -587,7 +612,7 @@ export class PaysheetService {
    * @param id id del pago a buscar
    * @returns el pago que corresponde al id
    */
-  async getPaymentById(id: string): Promise<PaymentType> {
+  async getPaymentById(id: string | number): Promise<PaymentType> {
     try {
       return (
         await this.plpgsqlService.executeQuery<PaymentType>(
@@ -739,7 +764,7 @@ export class PaysheetService {
    * @param payment el pago a guardar en la base de datos.
    * @returns el id del pago guardado en la base de datos.
    */
-  async savePayment(payment: PaymentDto): Promise<number> {
+  async savePayment(payment: PaymentDto, time: Date = null): Promise<number> {
     try {
       if (
         !Boolean(
@@ -751,7 +776,8 @@ export class PaysheetService {
         throw new BadRequestException(
           'the set of noveltyId, contractId and conceptId is invalid, only one of them can is defined',
         );
-      payment.paymentTimestamp = new Date();
+      if (time) payment.paymentTimestamp = time;
+      else payment.paymentTimestamp = new Date();
       return (
         await this.plpgsqlService.executeProcedureSave<PaymentDto>(
           PaysheetSql.savePayment,
@@ -760,6 +786,96 @@ export class PaysheetService {
       )['p_id'];
     } catch (error) {
       this.logger.error('Error saving payment', error);
+      throw error;
+    }
+  }
+
+  async generatePayment(usersIds: number[]): Promise<StreamableFile> {
+    try {
+      let csv = 'nombre, concepto, valor\n';
+      const concepts = await this.getAllConceptsTypes();
+      const date = new Date();
+      const objectId = new ObjectId();
+      const errorHandler = (error: any) => {
+        this.logger.error('Error generating payment', error);
+      };
+      for (let i = 0; i < usersIds.length; i++) {
+        let total = 0;
+        const user = await this.userService.getUserById(usersIds[i]);
+        const contracts = await this.getPaysheetByUserId(usersIds[i]);
+        const faults = await this.userService.getCurrentsFaultsByUserId(
+          usersIds[i],
+        );
+        for (let j = 0; j < contracts.length; j++) {
+          total += contracts[j].salary;
+          const novelties = await this.getNoveltiesByDateAndContractId(
+            date.toISOString(),
+            contracts[j].paysheetId,
+          );
+          this.savePayment(
+            {
+              fileId: objectId.toString(),
+              contractId: contracts[j].paysheetId,
+              userId: usersIds[i],
+            },
+            date,
+          ).catch(errorHandler);
+          const salaryPerDay = contracts[j].salary / 30;
+          for (let k = 0; k < concepts.length; k++) {
+            const subtotal: number =
+              concepts[k].percentage * contracts[j].salary;
+            total += Math.max(
+              Math.min(subtotal, concepts[k].minValue),
+              concepts[k].maxValue,
+            );
+            this.savePayment(
+              {
+                fileId: objectId.toString(),
+                conceptId: concepts[k].conceptTypeId,
+                userId: usersIds[i],
+              },
+              date,
+            ).catch(errorHandler);
+          }
+          for (let k = 0; k < novelties.length; k++) {
+            if (novelties[k].percentage) {
+              total += novelties[k].percentage * contracts[j].salary;
+              continue;
+            }
+            total += novelties[k].value;
+            this.savePayment(
+              {
+                fileId: objectId.toString(),
+                noveltyId: novelties[k].noveltyId,
+                userId: usersIds[i],
+              },
+              date,
+            ).catch(errorHandler);
+          }
+          for (let k = 0; k < faults.length; k++) {
+            const startDate = new Date(faults[k].startDate);
+            const endDate = new Date(faults[k].endDate);
+            const diffDays = Math.ceil(
+              Math.abs(endDate.getTime() - startDate.getTime()) /
+                (1000 * 60 * 60 * 24),
+            );
+            total -= diffDays * salaryPerDay;
+          }
+        }
+        csv += `${user.name}, ${user.lastName}, ${total}\n`;
+      }
+      const file = await this.fileGeneratorService.generateFile(
+        `paysheet-${date.getDate()}-${date.getMonth()}-${date.getFullYear()}.csv`,
+        'csv',
+        csv,
+      );
+      this.filesService.uploadFile(file, objectId).catch(errorHandler);
+      return new StreamableFile(file.buffer, {
+        type: 'application/octet-stream',
+        disposition: `attachment; filename="${file.filename}"`,
+      });
+    } catch (error) {
+      this.logger.error('Error generating payment', error);
       throw error;
     }
   }

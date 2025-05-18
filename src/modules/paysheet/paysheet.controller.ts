@@ -8,6 +8,8 @@ import {
   Delete,
   Param,
   Query,
+  ParseArrayPipe,
+  StreamableFile,
 } from '@nestjs/common';
 import { AuthGuard } from '../auth/guards';
 import { PaysheetService } from './paysheet.service';
@@ -23,7 +25,7 @@ import {
   PaysheetDto,
   PaysheetTypeDto,
 } from './dto';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { NoveltyType } from './types';
 
 @Controller('paysheet')
@@ -307,5 +309,13 @@ export class PaysheetController {
   @Delete('payment/:id')
   async deletePayment(@Param('id') id: string) {
     return await this.paysheetService.deletePayment(id);
+  }
+
+  @Post('generatePayments')
+  async generatePayment(
+    @Body(new ParseArrayPipe({ items: Number, whitelist: true }))
+    usersIds: number[],
+  ): Promise<StreamableFile> {
+    return await this.paysheetService.generatePayment(usersIds);
   }
 }

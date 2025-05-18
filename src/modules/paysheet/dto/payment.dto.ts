@@ -22,7 +22,7 @@ export class PaymentDto {
   fileId: string;
 
   @IsEmpty()
-  paymentTimestamp: Date;
+  paymentTimestamp?: Date;
 
   @ApiProperty({
     description: 'ID de la novedad a pagar(puede ser nulo)',

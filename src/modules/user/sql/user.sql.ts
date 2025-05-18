@@ -207,6 +207,7 @@ export enum UserSql {
         WHERE utf."falta_id" = $1
         ORDER BY upper(utf."fecha") DESC
     `,
+
   getFaultsByUserId = `
         SELECT 
             utf."falta_id" "foultId",
@@ -217,6 +218,20 @@ export enum UserSql {
         FROM usuarios."TB_Faltas" utf
         WHERE utf."personal_id" = $1
         ORDER BY upper(utf."fecha") DESC
+    `,
+
+  getCurrentsFaultsByUserId = `
+        SELECT 
+            utf."falta_id" "foultId",
+            DATE_TRUNC('month', lower(utf."fecha"))::date as "startDate",
+            upper(utf."fecha") as "endDate",
+            utf."justificación" as "justification",
+            utf."personal_id" as "userId"
+        FROM usuarios."TB_Faltas" utf
+        WHERE utf."personal_id" = $1 AND
+            daterange(DATE_TRUNC('month', lower(utf."fecha"))::date, 
+                        (DATE_TRUNC('month', upper(utf."fecha")) + INTERVAL '1 month' - INTERVAL '1 day')::DATE)
+            && daterange(DATE_TRUNC('month', CURRENT_DATE)::date, CURRENT_DATE)
     `,
 
   /**

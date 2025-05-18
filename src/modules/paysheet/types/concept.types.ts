@@ -7,7 +7,7 @@ export type ConceptTypeType = {
 };
 
 export type ConceptType = {
-  conceptId: number;
+  conceptId?: number;
   conceptTypeId: number;
   cityId: string;
   companyId: string;
