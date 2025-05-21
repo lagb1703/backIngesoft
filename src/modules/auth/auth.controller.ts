@@ -45,7 +45,7 @@ export class AuthController {
   }
 
   @Get('')
-  @Roles('Administrador')
+  @UseGuards(AuthGuard)
   pepe() {
     return 'pepe';
   }
@@ -56,7 +56,10 @@ export class AuthController {
 
   @Get('google/redirect')
   @UseGuards(AuthGuardPassport('google'))
-  async googleAuthRedirect(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+  async googleAuthRedirect(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     return await this.authService.setGoogleHeaderTokenToCookieToken(req, res);
   }
 }
