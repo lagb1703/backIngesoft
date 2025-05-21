@@ -12,7 +12,7 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { EducationService } from './education.service';
 import { HabilityType, UserHabilityType } from './types';
-import { AfinityDto, HabilityDto, UserHabilityDto } from './dto';
+import { AfinityDto, EducationDto, HabilityDto, UserHabilityDto } from './dto';
 
 @Controller('education')
 @ApiTags('education')
@@ -70,5 +70,28 @@ export class EducationController {
       afinity.afinity,
       id,
     );
+  }
+
+  @Get('courses')
+  async getAllCourses() {
+    return await this.educationService.getAllCourses();
+  }
+
+  @Post('courses')
+  async saveCourse(@Body() course: EducationDto): Promise<string> {
+    return await this.educationService.saveCourse(course);
+  }
+
+  @Put('courses/:id')
+  async updateCourse(
+    @Body() course: EducationDto,
+    @Param('id') id: string,
+  ): Promise<void> {
+    return await this.educationService.updateCourse(course, id);
+  }
+
+  @Delete('courses/:id')
+  async deleteCourse(@Param('id') id: string): Promise<void> {
+    return await this.educationService.deleteCourse(id);
   }
 }

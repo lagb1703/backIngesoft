@@ -1,12 +1,20 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PlpgsqlService } from 'src/newCore/database/services';
+import { MongoService } from 'src/mongoCore/database/services';
 import { EduationSql } from './sql/education.sql';
-import { HabilityType, UserHabilityType } from './types';
-import { HabilityDto, UserHabilityDto } from './dto';
+import { EducationType, HabilityType, UserHabilityType } from './types';
+import { EducationDto, HabilityDto, UserHabilityDto } from './dto';
+import { EducationCollection } from './mongo/education.mongo';
+import { ObjectId } from 'mongodb';
 
 @Injectable()
 export class EducationService {
-  constructor(private readonly plpgsqlService: PlpgsqlService) {}
+  private readonly logger = new Logger(EducationService.name);
+
+  constructor(
+    private readonly plpgsqlService: PlpgsqlService,
+    private readonly mongoService: MongoService,
+  ) {}
 
   /**
    * Esta función obtiene todas las habilidades de la base de datos
@@ -19,7 +27,7 @@ export class EducationService {
         [],
       );
     } catch (error) {
-      console.log('Error en el servicio de habilidades', error);
+      this.logger.error('Error en el servicio de habilidades', error);
       throw error;
     }
   }
@@ -36,7 +44,7 @@ export class EducationService {
         [],
       );
     } catch (error) {
-      console.log('Error en el servicio de habilidades', error);
+      this.logger.error('Error en el servicio de habilidades', error);
       throw error;
     }
   }
@@ -55,7 +63,7 @@ export class EducationService {
         [userId],
       );
     } catch (error) {
-      console.log('Error en el servicio de habilidades', error);
+      this.logger.error('Error en el servicio de habilidades', error);
       throw error;
     }
   }
@@ -76,7 +84,7 @@ export class EducationService {
         )
       )['p_id'];
     } catch (error) {
-      console.log('Error en el servicio de habilidades', error);
+      this.logger.error('Error en el servicio de habilidades', error);
       throw error;
     }
   }
@@ -97,7 +105,7 @@ export class EducationService {
         Number(habilityId),
       );
     } catch (error) {
-      console.log('Error en el servicio de habilidades', error);
+      this.logger.error('Error en el servicio de habilidades', error);
       throw error;
     }
   }
@@ -114,7 +122,7 @@ export class EducationService {
         Number(habilityId),
       );
     } catch (error) {
-      console.log('Error en el servicio de habilidades', error);
+      this.logger.error('Error en el servicio de habilidades', error);
       throw error;
     }
   }
@@ -128,7 +136,7 @@ export class EducationService {
         )
       )['p_id'];
     } catch (error) {
-      console.log('Error en el servicio de habilidades', error);
+      this.logger.error('Error en el servicio de habilidades', error);
       throw error;
     }
   }
@@ -149,7 +157,95 @@ export class EducationService {
         Number(habilityId),
       );
     } catch (error) {
-      console.log('Error en el servicio de habilidades', error);
+      this.logger.error('Error en el servicio de habilidades', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta función obtiene todos los cursos de la base de datos mongo
+   * @returns Todos los cursos de la base de datos
+   */
+  async getAllCourses(): Promise<EducationType[]> {
+    try {
+      return (await this.mongoService.aggregate(
+        EducationCollection.CO_Educacion,
+        [
+          {
+            $project: {
+              educationId: '$_id',
+              name: '$nombre',
+              startDate: '$fechaInicio',
+              endDate: '$fechaFinal',
+              habilities: '$habilidades',
+            },
+          },
+        ],
+      )) as any as EducationType[];
+    } catch (error) {
+      this.logger.error('Error en el servicio de habilidades', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta función guarda un curso en la base de datos mongo
+   * @param course curso a guardar
+   * @description Esta función guarda un curso en la base de datos
+   * @returns retorna el id del curso guardado
+   */
+  async saveCourse(course: EducationDto): Promise<string> {
+    try {
+      return (
+        await this.mongoService.insert(EducationCollection.CO_Educacion, {
+          nombre: course.name,
+          fechaInicio: course.startDate,
+          fechaFinal: course.endDate,
+          habilidades: course.habilities,
+        })
+      ).toString();
+    } catch (error) {
+      this.logger.error('Error en el servicio de habilidades', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta función edita un curso en la base de datos c
+   * @param course curso a editar
+   * @param courseId id del curso a editar
+   */
+  async updateCourse(course: EducationDto, courseId: string): Promise<void> {
+    try {
+      await this.mongoService.update(
+        EducationCollection.CO_Educacion,
+        {
+          $set: {
+            nombre: course.name,
+            fechaInicio: course.startDate,
+            fechaFinal: course.endDate,
+            habilidades: course.habilities,
+          },
+        },
+        { _id: new ObjectId(courseId) },
+      );
+    } catch (error) {
+      this.logger.error('Error en el servicio de habilidades', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta función elimina un curso de la base de datos mongo
+   * @param courseId id del curso a eliminar
+   */
+  async deleteCourse(courseId: string): Promise<void> {
+    try {
+      await this.mongoService.delete(EducationCollection.CO_Educacion, {
+        _id: new ObjectId(courseId),
+      });
+    } catch (error) {
+      this.logger.error('Error en el servicio de habilidades', error);
       throw error;
     }
   }
