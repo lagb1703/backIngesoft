@@ -36,6 +36,21 @@ export enum EduationSql {
     WHERE uthp."personal_id" = $1
   `,
 
+  getUsersByCourseId = `
+    SELECT 
+      utpe."personalArchivo_id" as "id",
+      utpe."personal_id" as "userId",
+      utpe."educacion_id" as "courseId",
+      utp."nombres" as "name",
+      utp."apellidos" as "lastname",
+      utp."identificacion" as "identification"
+    FROM usuarios."TB_PersonalesEducacion" utpe
+    LEFT JOIN usuarios."TB_Personales" utp
+      ON utp."personal_id" = utpe."personal_id"
+    WHERE utpe."educacion_id" = $1
+    ORDER BY utp."nombres", utp."apellidos" ASC
+  `,
+
   /**
    * @Actions Seccion solo para las consultas de tipo
    * INSERT, UPDATE, DELETE, POCEDURES
@@ -46,4 +61,7 @@ export enum EduationSql {
   deleteHability = `call usuarios."SP_HABILIDADESPKG_ELIMINARHABILIDAD"($1)`,
   saveHabilityUser = `call usuarios."SP_HABILIDADESPKG_VINCULARHABILIDADPERSONA"($1, $2)`,
   updatAfinityeHabilityUser = `call usuarios."SP_HABILIDADESPKG_EDITARHABILIDADPERSONA"($1, $2)`,
+  saveAssitence = `call usuarios."SP_CURSOSPKG_AGREGARASISTENCIA"($1, $2)`,
+  linkCourse = `call usuarios."SP_CURSOSPKG_VINCULARCURSO"($1, $2)`,
+  unlinkCourse = `call usuarios."SP_CURSOSPKG_DESVINCULARCURSO"($1)`,
 }

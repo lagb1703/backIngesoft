@@ -5,3 +5,9 @@ export type EducationType = {
     endDate: string;
     habilities: number[];
 }
+
+export type EducationPersonType = {
+    id: string;
+    userId: number;
+    educationId: number;
+}

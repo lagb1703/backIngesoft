@@ -94,4 +94,27 @@ export class EducationController {
   async deleteCourse(@Param('id') id: string): Promise<void> {
     return await this.educationService.deleteCourse(id);
   }
+
+  @Post('courses/assistances/userId/:userId/courseId/:courseId')
+  async saveAssitence(
+    @Param('userId') userId: string,
+    @Param('courseId') courseId: string,
+  ): Promise<void> {
+    return await this.educationService.saveAssitence(userId, courseId);
+  }
+
+  @Post('courses/linkCourse/userId/:userId/courseId/:courseId')
+  async deleteAssitence(
+    @Param('userId') userId: string,
+    @Param('courseId') courseId: string,
+  ): Promise<number> {
+    return await this.educationService.linkCourse(userId, courseId);
+  }
+
+  @Delete('courses/unlinkCourse/:userCourseId')
+  async unlinkCourse(
+    @Param('userCourseId') userCourseId: string,
+  ): Promise<void> {
+    return await this.educationService.unlinkCourse(userCourseId);
+  }
 }

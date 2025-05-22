@@ -249,4 +249,61 @@ export class EducationService {
       throw error;
     }
   }
+
+  /**
+   * Esta funcion guarda la asistencia de un usuario a un curso
+   * @param userId id del usuario
+   * @param courseId id del curso
+   * @description Esta función guarda la asistencia de un usuario a un curso
+   */
+  async saveAssitence(
+    userId: number | string,
+    courseId: string,
+  ): Promise<void> {
+    try {
+      await this.plpgsqlService.executeProcedureSave(
+        EduationSql.saveAssitence,
+        { userId, courseId },
+      );
+    } catch (error) {
+      this.logger.error('Error en el servicio de habilidades', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion desvincula un curso de un usuario
+   * @param userId id del usuario
+   * @param courseId id del curso
+   */
+  async linkCourse(userId: number | string, courseId: string): Promise<number> {
+    try {
+      return (
+        await this.plpgsqlService.executeProcedureSave(EduationSql.linkCourse, {
+          userId,
+          courseId,
+        })
+      )['p_id'];
+    } catch (error) {
+      this.logger.error('Error en el servicio de habilidades', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion desvincula un curso de un usuario
+   * @param userId id del usuario
+   * @param courseId id del curso
+   */
+  async unlinkCourse(usercourseId: string | number): Promise<void> {
+    try {
+      await this.plpgsqlService.executeProcedureDelete(
+        EduationSql.unlinkCourse,
+        Number(usercourseId),
+      );
+    } catch (error) {
+      this.logger.error('Error en el servicio de habilidades', error);
+      throw error;
+    }
+  }
 }
