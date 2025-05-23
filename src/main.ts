@@ -8,8 +8,19 @@ import * as cookieParser from 'cookie-parser';
 const logger = new Logger('Main');
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { cors: true });
-  app.enableCors();
+  const app = await NestFactory.create(AppModule);
+  app.enableCors({
+    origin: "https://literate-fortnight-qrp7rr7j6v43p4q-3000.app.github.dev",
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'Accept'
+    ],
+  });
+  app.use(cookieParser());
   // Define la ruta del api
   app.setGlobalPrefix('api/v1');
   app.use(cookieParser());

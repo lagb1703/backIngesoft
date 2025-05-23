@@ -1,1 +1,1 @@
-export * from './MongoFile.types';
+export * from './mongoFile.types';
