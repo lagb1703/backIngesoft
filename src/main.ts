@@ -10,7 +10,7 @@ const logger = new Logger('Main');
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors({
-    origin: "https://literate-fortnight-qrp7rr7j6v43p4q-3000.app.github.dev",
+    origin: "http://localhost:3000",
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
