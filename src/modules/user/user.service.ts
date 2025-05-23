@@ -21,6 +21,8 @@ import { UserSql } from './sql/user.sql';
 import { hash } from 'bcrypt';
 import { FilesService } from './../files/services/files.service';
 import { MongoFileType } from '../files/types';
+import { UserStateEnum } from './enums/UserState';
+import { UserRoleEnum } from './enums/UserRole';
 @Injectable()
 export class UserService {
   private readonly logger = new Logger(UserService.name);
@@ -186,6 +188,10 @@ export class UserService {
       await this.mailsService.sendWelcomeEmail(user.email);
       const hashedPassword = await hash(user.password, 10);
       user.password = hashedPassword;
+      user.personStateId = UserStateEnum.Candidato;
+      if(user.roleId == UserRoleEnum.Administrativo){
+        throw new BadRequestException("No se puede crear un administrador");
+      }
       return (
         await this.plpgsqlService.executeProcedureSave<UserDto>(
           UserSql.saveUser,

@@ -134,13 +134,7 @@ export class UserDto {
   @Min(1)
   branchOficeId?: number;
 
-  @ApiProperty({
-    description: 'User person state id',
-    example: 1,
-  })
-  @IsNotEmpty()
-  @IsNumber()
-  @Min(1)
+  @IsEmpty()
   personStateId?: number;
 
   @ApiProperty({
