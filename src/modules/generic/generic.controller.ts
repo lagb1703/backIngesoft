@@ -1,9 +1,20 @@
-import { Controller, Body, Param, Query, Post, Get, Put } from '@nestjs/common';
+import {
+  Controller,
+  Body,
+  Param,
+  Query,
+  Post,
+  Get,
+  Put,
+  Delete,
+} from '@nestjs/common';
 import { GenericService } from './generic.service';
 import { BranchOfOfficeDto, MeansOfPaymentDto } from './dto';
 import { ApiTags } from '@nestjs/swagger';
-import { MeansOfPaymentType } from './types';
+import { Citytype, MeansOfPaymentType } from './types';
 import { BranchOfOfficeType } from './types/branchOfOffice.type';
+import { CityDto } from './dto/city.dto';
+import { CompanyType } from './types/companies.type';
 
 @Controller('generic')
 @ApiTags('generic')
@@ -76,5 +87,35 @@ export class GenericController {
     @Param('id') id: string,
   ): Promise<void> {
     return this.genericService.updateMeansOfPayment(meansOfPaymentDto, id);
+  }
+
+  @Get('cities')
+  async getAllCities(): Promise<Citytype[]> {
+    return this.genericService.getAllCities();
+  }
+
+  @Post('city')
+  async saveCity(@Body() city: CityDto): Promise<string> {
+    return this.genericService.saveCity(city);
+  }
+
+  @Delete('city/:id')
+  async deleteCity(@Param('id') id: string): Promise<void> {
+    return this.genericService.deleteCity(id);
+  }
+
+  @Get('companies')
+  async getAllCompanies(): Promise<CompanyType[]> {
+    return this.genericService.getAllCompanies();
+  }
+
+  @Post('company')
+  async saveCompany(@Body() company: CompanyType): Promise<string> {
+    return this.genericService.saveCompany(company);
+  }
+
+  @Delete('company/:id')
+  async deleteCompany(@Param('id') id: string): Promise<void> {
+    return this.genericService.deleteCompany(id);
   }
 }

@@ -2,13 +2,21 @@ import { Injectable, Logger } from '@nestjs/common';
 import { BranchOfOfficeDto, MeansOfPaymentDto } from './dto';
 import { GenericSql } from './sql/generic.sql';
 import { PlpgsqlService } from 'src/newCore/database/services';
-import { MeansOfPaymentType } from './types';
+import { Citytype, MeansOfPaymentType } from './types';
 import { BranchOfOfficeType } from './types/branchOfOffice.type';
+import { MongoService } from 'src/mongoCore/database/services';
+import { GenericColletion } from './mongo/generic.mongo';
+import { ObjectId } from 'mongodb';
+import { CityDto } from './dto/city.dto';
+import { CompanyType } from './types/companies.type';
 
 @Injectable()
 export class GenericService {
   private readonly logger = new Logger(GenericService.name);
-  constructor(private readonly plpgsqlService: PlpgsqlService) {}
+  constructor(
+    private readonly plpgsqlService: PlpgsqlService,
+    private readonly mongoService: MongoService,
+  ) {}
 
   /**
    * Esta funcion obtiene todos los medios de pago de la base de datos postgress
@@ -213,6 +221,118 @@ export class GenericService {
       );
     } catch (error) {
       this.logger.error('Error updating means of payment', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion obtiene todas las ciudades de la base de datos mongo
+   * @returns Un array con todas las ciudades
+   * @description Esta funcion obtiene todas las ciudades de la base de datos
+   */
+  async getAllCities(): Promise<Citytype[]> {
+    try {
+      return (await this.mongoService.aggregate(GenericColletion.CO_Ciudades, [
+        {
+          $project: {
+            _id: 0,
+            city_id: '$_id',
+            city: '$ciudad',
+          },
+        },
+      ])) as Citytype[];
+    } catch (error) {
+      this.logger.error('Error getting all cities', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion guarda una nueva ciudad en la base de datos mongo
+   * @param city ciudad a guardar
+   * @description Esta funcion guarda una ciudad en la base de datos mongo
+   * @returns el id de la ciudad guardada
+   */
+  async saveCity(city: CityDto): Promise<string> {
+    try {
+      return (
+        await this.mongoService.insert(GenericColletion.CO_Ciudades, {
+          ciudad: city.city,
+        })
+      ).toString();
+    } catch (error) {
+      this.logger.error('Error saving city', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion elimina una ciudad de la base de datos mongo
+   * @param cityId id de la ciudad a eliminar
+   */
+  async deleteCity(cityId: string): Promise<void> {
+    try {
+      await this.mongoService.delete(GenericColletion.CO_Ciudades, {
+        _id: new ObjectId(cityId),
+      });
+    } catch (error) {
+      this.logger.error('Error deleting city', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion obtiene todas las empresas de la base de datos mongo
+   * @returns Un array con todas las empresas
+   */
+  async getAllCompanies(): Promise<CompanyType[]> {
+    try {
+      return (await this.mongoService.aggregate(GenericColletion.CO_Empresas, [
+        {
+          $project: {
+            _id: 0,
+            companyId: '$_id',
+            company: '$empresa',
+            email: '$correo',
+          },
+        },
+      ])) as CompanyType[];
+    } catch (error) {
+      this.logger.error('Error getting all companies', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion guarda una nueva empresa en la base de datos mongo
+   * @param company empresa a guardar
+   * @returns el id de la empresa guardada
+   */
+  async saveCompany(company: CompanyType): Promise<string> {
+    try {
+      return (
+        await this.mongoService.insert(GenericColletion.CO_Empresas, {
+          empresa: company.company,
+          correo: company.email,
+        })
+      ).toString();
+    } catch (error) {
+      this.logger.error('Error saving company', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Esta funcion elimina una empresa de la base de datos mongo
+   * @param companyId id de la empresa a eliminar
+   */
+  async deleteCompany(companyId: string): Promise<void> {
+    try {
+      await this.mongoService.delete(GenericColletion.CO_Empresas, {
+        _id: new ObjectId(companyId),
+      });
+    } catch (error) {
+      this.logger.error('Error deleting company', error);
       throw error;
     }
   }
