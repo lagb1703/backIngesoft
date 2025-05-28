@@ -22,12 +22,13 @@ import {
   FileUserType,
   FileUserTypeType,
   IdentificationType,
+  RequirementType,
   RoleType,
   User,
   UserAcountType,
   UserStateType,
 } from './types';
-import { FileUserDto, FileUserTypeDto } from './dtos';
+import { FileUserDto, FileUserTypeDto, RequirementDto } from './dtos';
 import { MongoFileType } from '../files/types';
 
 @ApiTags('user')
@@ -225,5 +226,22 @@ export class UserController {
   @Delete('faults/:faultId')
   async deleteFault(@Param('faultId') faultId: string): Promise<void> {
     return await this.userService.deleteFault(faultId);
+  }
+
+  @Get('requirements')
+  async getAllRequirements(): Promise<RequirementType[]> {
+    return await this.userService.getAllRequirements();
+  }
+
+  @Post('requirement')
+  async saveRequirement(@Body() requirement: RequirementDto): Promise<string> {
+    return await this.userService.saveRequirement(requirement);
+  }
+
+  @Delete('requirement/:requirementId')
+  async deleteRequirement(
+    @Param('requirementId') requirementId: string,
+  ): Promise<void> {
+    return await this.userService.deleteRequirement(requirementId);
   }
 }

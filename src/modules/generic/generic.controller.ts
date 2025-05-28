@@ -15,6 +15,7 @@ import { Citytype, MeansOfPaymentType } from './types';
 import { BranchOfOfficeType } from './types/branchOfOffice.type';
 import { CityDto } from './dto/city.dto';
 import { CompanyType } from './types/companies.type';
+import { CompanyDto } from './dto/company.dto';
 
 @Controller('generic')
 @ApiTags('generic')
@@ -110,7 +111,7 @@ export class GenericController {
   }
 
   @Post('company')
-  async saveCompany(@Body() company: CompanyType): Promise<string> {
+  async saveCompany(@Body() company: CompanyDto): Promise<string> {
     return this.genericService.saveCompany(company);
   }
 

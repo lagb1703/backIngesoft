@@ -3,3 +3,4 @@ export * from './role.type';
 export * from './state.type';
 export * from './identificationTypes.type';
 export * from './fileUser.type';
+export * from './requirements.type';

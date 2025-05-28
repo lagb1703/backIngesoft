@@ -6,7 +6,13 @@ import {
 } from '@nestjs/common';
 import { PlpgsqlService } from 'src/newCore/database/services';
 import { MailsService } from '../mails/mails.service';
-import { FaultDto, FileUserDto, FileUserTypeDto, UserDto } from './dtos';
+import {
+  FaultDto,
+  FileUserDto,
+  FileUserTypeDto,
+  RequirementDto,
+  UserDto,
+} from './dtos';
 import {
   UserAcountType,
   RoleType,
@@ -16,6 +22,7 @@ import {
   FileUserTypeType,
   FileUserType,
   FaultType,
+  RequirementType,
 } from './types';
 import { UserSql } from './sql/user.sql';
 import { hash } from 'bcrypt';
@@ -23,6 +30,9 @@ import { FilesService } from './../files/services/files.service';
 import { MongoFileType } from '../files/types';
 import { UserStateEnum } from './enums/UserState';
 import { UserRoleEnum } from './enums/UserRole';
+import { MongoService } from 'src/mongoCore/database/services';
+import { UserCollection } from './mongo/user.mongo';
+import { ObjectId } from 'mongodb';
 @Injectable()
 export class UserService {
   private readonly logger = new Logger(UserService.name);
@@ -30,6 +40,7 @@ export class UserService {
     private readonly plpgsqlService: PlpgsqlService,
     private readonly mailsService: MailsService,
     private readonly filesService: FilesService,
+    private readonly mongoService: MongoService,
   ) {}
 
   /**
@@ -189,8 +200,8 @@ export class UserService {
       const hashedPassword = await hash(user.password, 10);
       user.password = hashedPassword;
       user.personStateId = UserStateEnum.Candidato;
-      if(user.roleId == UserRoleEnum.Administrativo){
-        throw new BadRequestException("No se puede crear un administrador");
+      if (user.roleId == UserRoleEnum.Administrativo) {
+        throw new BadRequestException('No se puede crear un administrador');
       }
       return (
         await this.plpgsqlService.executeProcedureSave<UserDto>(
@@ -705,6 +716,56 @@ export class UserService {
       );
     } catch (error) {
       this.logger.error('Error al eliminar la falta', error);
+      throw error;
+    }
+  }
+
+  async getAllRequirements(): Promise<RequirementType[]> {
+    try {
+      return (await this.mongoService.aggregate(
+        UserCollection.CO_Requerimientos,
+        [
+          {
+            $project: {
+              _id: 0,
+              requirementId: '$_id',
+              description: 'descripcion',
+              initialSalary: 'salarioInicial',
+              finalSalary: 'salarioFinal',
+              isVirtual: 'esVirtual',
+            },
+          },
+        ],
+      )) as RequirementType[];
+    } catch (error) {
+      this.logger.error('Error al obtener todos los requerimientos', error);
+      throw error;
+    }
+  }
+
+  async saveRequirement(requirement: RequirementDto): Promise<string> {
+    try {
+      return (
+        await this.mongoService.insert(UserCollection.CO_Requerimientos, {
+          descripcion: requirement.description,
+          salarioInicial: requirement.initialSalary,
+          salarioFinal: requirement.finalSalary,
+          esVirtual: requirement.isVirtual,
+        })
+      ).toString();
+    } catch (error) {
+      this.logger.error('Error al guardar el requerimiento', error);
+      throw error;
+    }
+  }
+
+  async deleteRequirement(requirementId: string): Promise<void> {
+    try {
+      await this.mongoService.delete(UserCollection.CO_Requerimientos, {
+        _id: new ObjectId(requirementId),
+      });
+    } catch (error) {
+      this.logger.error('Error al eliminar el requerimiento', error);
       throw error;
     }
   }

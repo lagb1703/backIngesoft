@@ -9,6 +9,7 @@ import { GenericColletion } from './mongo/generic.mongo';
 import { ObjectId } from 'mongodb';
 import { CityDto } from './dto/city.dto';
 import { CompanyType } from './types/companies.type';
+import { CompanyDto } from './dto/company.dto';
 
 @Injectable()
 export class GenericService {
@@ -308,7 +309,7 @@ export class GenericService {
    * @param company empresa a guardar
    * @returns el id de la empresa guardada
    */
-  async saveCompany(company: CompanyType): Promise<string> {
+  async saveCompany(company: CompanyDto): Promise<string> {
     try {
       return (
         await this.mongoService.insert(GenericColletion.CO_Empresas, {

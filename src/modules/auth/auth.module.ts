@@ -12,6 +12,7 @@ import { PassportModule } from '@nestjs/passport';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { MailsService } from '../mails/mails.service';
 import { ConfigModule as ConfigModulePostgress } from 'src/newCore/config/config.module';
+import { DatabaseModule } from 'src/mongoCore/database/database.module';
 
 const configService: ConfigService = new ConfigService();
 
@@ -20,6 +21,7 @@ class UserModule {
   static register(): DynamicModule {
     return {
       module: UserModule,
+      imports: [DatabaseModule],
       providers: [UserService, PlpgsqlService, MailsService, PostgreService],
       exports: [UserService],
     };
