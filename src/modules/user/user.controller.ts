@@ -30,9 +30,12 @@ import {
 } from './types';
 import { FileUserDto, FileUserTypeDto, RequirementDto } from './dtos';
 import { MongoFileType } from '../files/types';
+import { AuthInterceptor } from '../auth/auth.interceptor';
 
 @ApiTags('user')
 @Controller('user')
+@UseInterceptors(AuthInterceptor)
+@UseGuards(AuthGuard)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
