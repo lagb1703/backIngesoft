@@ -41,7 +41,7 @@ export class UserService {
     private readonly mailsService: MailsService,
     private readonly filesService: FilesService,
     private readonly mongoService: MongoService,
-  ) {}
+  ) { }
 
   /**
    * Esta función obtiene todos los usuarios de la base de datos postgress.
@@ -123,6 +123,7 @@ export class UserService {
     roleId?: string,
   ): Promise<User[]> {
     try {
+      let consulta = "";
       if (
         !name &&
         !beforeDate &&
@@ -131,21 +132,22 @@ export class UserService {
         !personState &&
         !roleId
       ) {
-        throw new BadRequestException(
-          'No se han proporcionado filtros para la consulta',
+        consulta = UserSql.getUserByFilters.replace(
+          ':Conditions',
+          '');
+      } else {
+        consulta = UserSql.getUserByFilters.replace(
+          ':Conditions',
+          'WHERE :name AND :dateA AND :dateB AND :isVirtual AND :personState AND :roleId',
         );
       }
-      let consulta = UserSql.getUserByFilters.replace(
-        ':Conditions',
-        'WHERE :name AND :dateA AND :dateB AND :isVirtual AND :personState AND :roleId',
-      );
       if (name) {
         consulta = consulta.replace(
           ':name',
           `lower(nombres) || ' ' || lower(apellidos) ILIKE '%${name.toLocaleLowerCase()}%'`,
         );
       } else {
-        consulta = consulta.replace(':name', '');
+        consulta = consulta.replace(':name AND ', '');
       }
       if (afterDate) {
         consulta = consulta.replace(
@@ -153,7 +155,7 @@ export class UserService {
           `lower(fechaingreso) > '${afterDate}'::date`,
         );
       } else {
-        consulta = consulta.replace(' AND :dateA', '');
+        consulta = consulta.replace(':dateA AND ', '');
       }
       if (beforeDate) {
         consulta = consulta.replace(
@@ -161,12 +163,12 @@ export class UserService {
           `lower(fechaingreso) < '${beforeDate}'::date`,
         );
       } else {
-        consulta = consulta.replace(' AND :dateB', '');
+        consulta = consulta.replace(':dateB AND ', '');
       }
       if (isVirtual) {
         consulta = consulta.replace(':isVirtual', `virtual = ${isVirtual}`);
       } else {
-        consulta = consulta.replace(' AND :isVirtual', '');
+        consulta = consulta.replace(':isVirtual AND ', '');
       }
       if (personState) {
         consulta = consulta.replace(
@@ -174,12 +176,12 @@ export class UserService {
           `estadopersona_id = ${personState}`,
         );
       } else {
-        consulta = consulta.replace(' AND :personState', '');
+        consulta = consulta.replace(':personState AND ' , '');
       }
       if (roleId) {
         consulta = consulta.replace(':roleId', `rol_id = ${roleId}`);
       } else {
-        consulta = consulta.replace(' AND :roleId', '');
+        consulta = consulta.replace('AND :roleId', '');
       }
       return await this.plpgsqlService.executeQuery<User>(consulta, []);
     } catch (error) {
