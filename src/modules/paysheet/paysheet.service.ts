@@ -792,7 +792,7 @@ export class PaysheetService {
 
   async generatePayment(usersIds: number[]): Promise<StreamableFile> {
     try {
-      let csv = 'nombre, concepto, valor\n';
+      let csv = 'nombre, valor\n';
       const concepts = await this.getAllConceptsTypes();
       const date = new Date();
       const objectId = new ObjectId();
@@ -862,7 +862,7 @@ export class PaysheetService {
             total -= diffDays * salaryPerDay;
           }
         }
-        csv += `${user.name}, ${user.lastName}, ${total}\n`;
+        csv += `${user.name}, ${total}\n`;
       }
       const file = await this.fileGeneratorService.generateFile(
         `paysheet-${date.getDate()}-${date.getMonth()}-${date.getFullYear()}.csv`,
