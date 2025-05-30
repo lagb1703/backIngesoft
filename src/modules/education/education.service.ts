@@ -6,6 +6,7 @@ import { EducationType, HabilityType, UserHabilityType } from './types';
 import { EducationDto, HabilityDto, UserHabilityDto } from './dto';
 import { EducationCollection } from './mongo/education.mongo';
 import { ObjectId } from 'mongodb';
+import { match } from 'assert';
 
 @Injectable()
 export class EducationService {
@@ -14,7 +15,7 @@ export class EducationService {
   constructor(
     private readonly plpgsqlService: PlpgsqlService,
     private readonly mongoService: MongoService,
-  ) {}
+  ) { }
 
   /**
    * Esta función obtiene todas las habilidades de la base de datos
@@ -173,6 +174,7 @@ export class EducationService {
         [
           {
             $project: {
+              _id: 0,
               educationId: '$_id',
               name: '$nombre',
               startDate: '$fechaInicio',
@@ -182,6 +184,79 @@ export class EducationService {
           },
         ],
       )) as any as EducationType[];
+    } catch (error) {
+      this.logger.error('Error en el servicio de habilidades', error);
+      throw error;
+    }
+  }
+
+  async getCoursesById(courseId: string): Promise<EducationType[]> {
+    try {
+      return (await this.mongoService.aggregate(
+        EducationCollection.CO_Educacion,
+        [
+          {
+            $match: {
+              _id: new ObjectId(courseId),
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              educationId: '$_id',
+              name: '$nombre',
+              startDate: '$fechaInicio',
+              endDate: '$fechaFinal',
+              habilities: '$habilidades',
+            },
+          },
+        ],
+      )) as any as EducationType[];
+    } catch (error) {
+      this.logger.error('Error en el servicio de habilidades', error);
+      throw error;
+    }
+  }
+
+  async getCoursesByIds(coursesId: string[]): Promise<EducationType[]> {
+    try {
+      return (await this.mongoService.aggregate(
+        EducationCollection.CO_Educacion,
+        [
+          {
+            $match: {
+              _id: {
+                $in: coursesId.map((id) => new ObjectId(id)),
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              educationId: '$_id',
+              name: '$nombre',
+              startDate: '$fechaInicio',
+              endDate: '$fechaFinal',
+              habilities: '$habilidades',
+            },
+          },
+        ],
+      )) as any as EducationType[];
+    } catch (error) {
+      this.logger.error('Error en el servicio de habilidades', error);
+      throw error;
+    }
+  }
+
+  async getCoursesByUserId(userId: string | number): Promise<EducationType[]> {
+    try {
+      const reult: any[] = await this.plpgsqlService.executeQuery(
+        EduationSql.getCoursesByUserId,
+        [userId],
+      );
+      return await this.getCoursesByIds(
+        reult.map((course) => course.courseId),
+      );
     } catch (error) {
       this.logger.error('Error en el servicio de habilidades', error);
       throw error;

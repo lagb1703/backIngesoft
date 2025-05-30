@@ -51,6 +51,15 @@ export enum EduationSql {
     ORDER BY utp."nombres", utp."apellidos" ASC
   `,
 
+  getCoursesByUserId = `
+    SELECT 
+      utpe."personalArchivo_id" as "id",
+      utpe."personal_id" as "userId",
+      utpe."educacion_id" as "courseId"
+    FROM usuarios."TB_PersonalesEducacion" utpe
+    WHERE utpe."personal_id" = $1
+  `,
+
   /**
    * @Actions Seccion solo para las consultas de tipo
    * INSERT, UPDATE, DELETE, POCEDURES

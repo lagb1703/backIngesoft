@@ -8,14 +8,19 @@ import {
   Post,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { EducationService } from './education.service';
 import { HabilityType, UserHabilityType } from './types';
 import { AfinityDto, EducationDto, HabilityDto, UserHabilityDto } from './dto';
+import { AuthGuard } from '../auth/guards';
+import { GetUser } from '../auth/decorators';
+import { UserAcountType } from '../user/types';
 
 @Controller('education')
 @ApiTags('education')
+@UseGuards(AuthGuard) 
 export class EducationController {
   constructor(private readonly educationService: EducationService) {}
 
@@ -75,6 +80,20 @@ export class EducationController {
   @Get('courses')
   async getAllCourses() {
     return await this.educationService.getAllCourses();
+  }
+
+  @Get('courses/userId')
+  async getCoursesByUserCookieId(
+    @GetUser('userId') userId: UserAcountType,
+  ) {
+    return await this.educationService.getCoursesByUserId(userId.userId);
+  }
+
+  @Get('courses/userId/:userId')
+  async getCoursesByUserId(
+    @Param('userId') userId: string,
+  ) {
+    return await this.educationService.getCoursesByUserId(userId);
   }
 
   @Post('courses')
