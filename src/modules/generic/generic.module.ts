@@ -8,5 +8,6 @@ import { DatabaseModule as MongoModule } from 'src/mongoCore/database/database.m
   imports: [DatabaseModule, MongoModule],
   controllers: [GenericController],
   providers: [GenericService],
+  exports: [GenericService],
 })
 export class GenericModule {}

@@ -304,6 +304,29 @@ export class GenericService {
     }
   }
 
+  async getCompanyById(companyId: string): Promise<CompanyType> {
+    try {
+      return (await this.mongoService.aggregate(GenericColletion.CO_Empresas, [
+        {
+          $match: {
+            _id: new ObjectId(companyId), 
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            companyId: '$_id',
+            company: '$empresa',
+            email: '$correo',
+          },
+        },
+      ]))[0] as CompanyType;
+    } catch (error) {
+      this.logger.error('Error getting all companies', error);
+      throw error;
+    }
+  }
+
   /**
    * Esta funcion guarda una nueva empresa en la base de datos mongo
    * @param company empresa a guardar

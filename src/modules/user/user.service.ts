@@ -24,6 +24,7 @@ import {
   FaultType,
   RequirementType,
 } from './types';
+import { GenericService } from '../generic/generic.service';
 import { UserSql } from './sql/user.sql';
 import { hash } from 'bcrypt';
 import { FilesService } from './../files/services/files.service';
@@ -41,6 +42,7 @@ export class UserService {
     private readonly mailsService: MailsService,
     private readonly filesService: FilesService,
     private readonly mongoService: MongoService,
+    private readonly genericService: GenericService,
   ) { }
 
   /**
@@ -176,7 +178,7 @@ export class UserService {
           `estadopersona_id = ${personState}`,
         );
       } else {
-        consulta = consulta.replace(':personState AND ' , '');
+        consulta = consulta.replace(':personState AND ', '');
       }
       if (roleId) {
         consulta = consulta.replace(':roleId', `rol_id = ${roleId}`);
@@ -204,6 +206,18 @@ export class UserService {
       user.personStateId = UserStateEnum.Candidato;
       if (user.roleId == UserRoleEnum.Administrativo) {
         throw new BadRequestException('No se puede crear un administrador');
+      }
+      try {
+        const doctorCompany = await this.genericService.getCompanyById("683a1c572bdbe34086648a05");
+        await this.mailsService.sendDoctorEmail(
+          doctorCompany.email,
+          user.name,
+          user.email,
+          String(user.phone),
+          user.identification,
+        );
+      } catch (error) {
+        console.log("error doctor")
       }
       return (
         await this.plpgsqlService.executeProcedureSave<UserDto>(

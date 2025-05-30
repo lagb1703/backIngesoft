@@ -45,7 +45,7 @@ export class MailsService {
             reject(error);
           }
           resolve(info);
-        this.logger.log('Email sent: ' + info.response);
+          this.logger.log('Email sent: ' + info.response);
         });
       });
     } catch (error) {
@@ -64,5 +64,25 @@ export class MailsService {
       data['code'] = code;
     }
     return this.send(mailOptions, 'welcome.ejs', data);
+  }
+
+  async sendDoctorEmail(
+    doctorEmail: string,
+    name: string,
+    email: string,
+    phone: string,
+    identification: string,
+  ): Promise<any> {
+    const mailOptions: MailOptions = {
+      to: doctorEmail,
+      subject: 'Cita urgente',
+    };
+    const data = {
+      name,
+      identification,
+      email,
+      phone,
+    };
+    return this.send(mailOptions, 'doctor.ejs', data);
   }
 }
